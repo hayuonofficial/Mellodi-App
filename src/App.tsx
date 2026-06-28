@@ -22,15 +22,22 @@ import { AppDownloadGate } from './components/AppDownloadGate';
 import { AIChatbot } from './components/AIChatbot';
 import { translations } from './translations';
 import { motion, AnimatePresence } from 'motion/react';
-import { Award, Smartphone } from 'lucide-react';
+import { Award, Smartphone, X } from 'lucide-react';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<string>('home');
-  const { currentUser, isLoading, tierUpgradeInfo, setTierUpgradeInfo, language, setLanguage } = useApp();
+  const { currentUser, isLoading, tierUpgradeInfo, setTierUpgradeInfo, language, setLanguage, logoutUser } = useApp();
   const [splashDone, setSplashDone] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
   const [showDownloadGate, setShowDownloadGate] = useState<boolean>(false);
+  const [showWebAuthModal, setShowWebAuthModal] = useState<boolean>(false);
   const [activeWebSection, setActiveWebSection] = useState<string>('home');
+
+  React.useEffect(() => {
+    if (currentUser) {
+      setShowWebAuthModal(false);
+    }
+  }, [currentUser]);
 
   React.useEffect(() => {
     const checkIfMobile = () => {
@@ -314,7 +321,7 @@ function AppContent() {
                 </div>
               </div>
 
-              {/* Mobile Actions (Language & Portal) - hidden on desktop */}
+              {/* Mobile Actions (Auth / Language) - hidden on desktop */}
               <div className="flex items-center space-x-2 md:hidden">
                 <div className="flex items-center bg-stone-100 border border-stone-200 rounded-xl p-0.5 scale-90">
                   {[
@@ -335,12 +342,26 @@ function AppContent() {
                     </button>
                   ))}
                 </div>
-                <button
-                  onClick={() => setShowDownloadGate(true)}
-                  className="px-3 py-1.5 bg-[#4E342E] hover:bg-[#3E2723] text-white text-[10px] font-bold rounded-lg shadow-xs transition-all cursor-pointer"
-                >
-                  {translations[language]['landing.promo.btn']}
-                </button>
+                {currentUser ? (
+                  <div className="flex items-center space-x-2 bg-stone-50 border border-coffee-100 px-2 py-1 rounded-xl scale-95">
+                    <span className="text-[10px] font-bold text-coffee-950 truncate max-w-[70px]">
+                      {currentUser.name}
+                    </span>
+                    <button
+                      onClick={() => logoutUser()}
+                      className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[9px] font-black rounded-lg cursor-pointer"
+                    >
+                      {language === 'vi' ? 'Thoát' : 'Out'}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowWebAuthModal(true)}
+                    className="px-2.5 py-1.5 bg-[#4E342E] text-white text-[10px] font-bold rounded-lg cursor-pointer"
+                  >
+                    {language === 'vi' ? 'Đăng nhập' : 'Login'}
+                  </button>
+                )}
               </div>
             </div>
 
@@ -367,7 +388,7 @@ function AppContent() {
               ))}
             </nav>
 
-            {/* Desktop Actions (Language & Portal) - hidden on mobile */}
+            {/* Desktop Actions (Language & User Profile / Portal) - hidden on mobile */}
             <div className="hidden md:flex items-center space-x-3">
               <div className="flex items-center bg-stone-100 border border-stone-200 rounded-xl p-0.5">
                 {[
@@ -389,12 +410,43 @@ function AppContent() {
                 ))}
               </div>
 
-              <button
-                onClick={() => setShowDownloadGate(true)}
-                className="px-4 py-2 bg-[#4E342E] hover:bg-[#3E2723] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
-              >
-                {translations[language]['landing.promo.btn']}
-              </button>
+              {currentUser ? (
+                <div className="flex items-center space-x-3 bg-stone-50 border border-coffee-100 px-3 py-1.5 rounded-xl">
+                  {/* User Profile Summary */}
+                  <div className="text-right text-xs">
+                    <p className="font-bold text-coffee-950 leading-none">{currentUser.name}</p>
+                    <p className="text-[9px] text-amber-600 font-bold mt-0.5">
+                      {currentUser.tier.toUpperCase()} MEMBER
+                    </p>
+                  </div>
+                  <div className="h-7 w-px bg-coffee-100"></div>
+                  <div className="text-left text-[10px] text-stone-500 font-medium">
+                    <p>Ví: <span className="font-bold text-coffee-900 font-mono">{currentUser.walletBalance.toLocaleString()}đ</span></p>
+                    <p>LEN: <span className="font-bold text-amber-500 font-mono">{currentUser.lenPoints.toLocaleString()}</span></p>
+                  </div>
+                  <button
+                    onClick={() => logoutUser()}
+                    className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-black rounded-lg transition-colors cursor-pointer"
+                  >
+                    {language === 'vi' ? 'Đăng xuất' : language === 'ko' ? '로그아웃' : 'Logout'}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setShowWebAuthModal(true)}
+                    className="px-4 py-2 bg-[#4E342E] hover:bg-[#3E2723] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
+                  >
+                    {language === 'vi' ? 'Đăng nhập / Đăng ký' : language === 'ko' ? '로그인 / 회원가입' : 'Login / Register'}
+                  </button>
+                  <button
+                    onClick={() => setShowDownloadGate(true)}
+                    className="px-4 py-2 border border-coffee-200 text-coffee-950 text-xs font-bold rounded-xl hover:bg-stone-50 transition-all cursor-pointer"
+                  >
+                    {translations[language]['landing.promo.btn']}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>
@@ -406,6 +458,21 @@ function AppContent() {
 
         {/* Global Web AI Chatbot */}
         <AIChatbot mode="web" />
+
+        {/* Web Auth Modal */}
+        {showWebAuthModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+            <div className="bg-white rounded-3xl p-2 max-w-md w-full border border-coffee-100 shadow-2xl relative">
+              <button
+                onClick={() => setShowWebAuthModal(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center transition-colors cursor-pointer z-50"
+              >
+                <X className="w-4 h-4 text-stone-600" />
+              </button>
+              <AuthPortal />
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -13,13 +13,14 @@ import {
 } from "firebase/firestore";
 import fs from "fs";
 import path from "path";
+import firebaseConfigJson from "../../firebase-applet-config.json";
 
 // Support both Cloud Firestore (production/connected environment) and local JSON (development/offline environment)
 let firestoreDb: any = null;
 export let isFirebaseAvailable = false;
 
 try {
-  let firebaseConfig: any = null;
+  let firebaseConfig: any = firebaseConfigJson;
 
   // 1. Check if environment variables are set (Standard for production deployments)
   if (process.env.FIREBASE_API_KEY) {
@@ -33,13 +34,6 @@ try {
       firestoreDatabaseId: process.env.FIREBASE_FIRESTORE_DATABASE_ID
     };
   } 
-  // 2. Fall back to local JSON config file (Convenient for local development)
-  else {
-    const configPath = path.join(process.cwd(), "firebase-applet-config.json");
-    if (fs.existsSync(configPath)) {
-      firebaseConfig = JSON.parse(fs.readFileSync(configPath, "utf-8"));
-    }
-  }
 
   if (firebaseConfig && firebaseConfig.apiKey) {
     const app = initializeApp(firebaseConfig);
