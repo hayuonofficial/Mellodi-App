@@ -13,14 +13,21 @@ import {
 } from "firebase/firestore";
 import fs from "fs";
 import path from "path";
-import firebaseConfigJson from "../../firebase-applet-config.json";
 
 // Support both Cloud Firestore (production/connected environment) and local JSON (development/offline environment)
 let firestoreDb: any = null;
 export let isFirebaseAvailable = false;
 
 try {
-  let firebaseConfig: any = firebaseConfigJson;
+  let firebaseConfig: any = {
+    apiKey: "AIzaSyD0arVTJCiNE3uLR0aRgiAhyKLaykMnR00",
+    authDomain: "mellodi-638a6.firebaseapp.com",
+    projectId: "mellodi-638a6",
+    storageBucket: "mellodi-638a6.firebasestorage.app",
+    messagingSenderId: "670516945218",
+    appId: "1:670516945218:web:14979f45361deda20268db",
+    measurementId: "G-W2SFMBG0YD"
+  };
 
   // 1. Check if environment variables are set (Standard for production deployments)
   if (process.env.FIREBASE_API_KEY) {
