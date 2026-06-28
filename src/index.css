@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, Cambria, serif;
+  --color-coffee-50: #FAF9F6;
+  --color-coffee-100: #F3F0ED;
+  --color-coffee-200: #E0D7D0;
+  --color-coffee-500: #8D6E63;
+  --color-coffee-600: #8D6E63;
+  --color-coffee-700: #8D6E63;
+  --color-coffee-800: #6D4C41;
+  --color-coffee-900: #4E342E;
+  --color-coffee-950: #4E342E;
+  --color-gold-400: #8D6E63;
+  --color-gold-500: #4E342E;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-coffee-50);
+    color: var(--color-coffee-950);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* Animations and custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-coffee-50);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-coffee-200);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-coffee-600);
+}

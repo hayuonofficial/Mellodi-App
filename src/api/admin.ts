@@ -1,0 +1,359 @@
+import express from "express";
+import { 
+  getAllUsers, 
+  getAllOrdersGlobal, 
+  getAllTransactionsGlobal,
+  createUser,
+  createOrder,
+  createTransaction,
+  UserRecord,
+  OrderRecord,
+  TransactionRecord
+} from "../lib/firebase-db";
+import { products } from "../data/products";
+
+const router = express.Router();
+
+// Helper to get favorite drink for a user's orders
+function getFavoriteDrink(orders: OrderRecord[]) {
+  if (orders.length === 0) return "N/A";
+  const counts: Record<string, number> = {};
+  orders.forEach(o => {
+    o.items.forEach(item => {
+      const name = item.product.name.vi;
+      counts[name] = (counts[name] || 0) + (item.quantity || 1);
+    });
+  });
+  let fav = "N/A";
+  let max = 0;
+  Object.entries(counts).forEach(([name, count]) => {
+    if (count > max) {
+      max = count;
+      fav = name;
+    }
+  });
+  return fav;
+}
+
+// API: Get customers list with aggregated analytics (Search & Filter)
+router.get("/customers", async (req, res) => {
+  try {
+    const search = (req.query.search as string || "").trim().toLowerCase();
+    const tierFilter = req.query.tier as string || "all"; // 'all', 'Welcome', 'Green', 'Gold'
+    const spendFilter = req.query.spend as string || "all"; // 'all', 'under100', '100to500', 'over500'
+
+    const allUsers = await getAllUsers();
+    const allOrders = await getAllOrdersGlobal();
+
+    // Group orders by userId
+    const ordersByUser: Record<string, OrderRecord[]> = {};
+    allOrders.forEach(order => {
+      if (!ordersByUser[order.userId]) {
+        ordersByUser[order.userId] = [];
+      }
+      ordersByUser[order.userId].push(order);
+    });
+
+    // Aggregate statistics for each customer
+    let customers = allUsers.map(user => {
+      const userOrders = ordersByUser[user.id] || [];
+      const totalSpent = userOrders.reduce((sum, o) => sum + o.totalPrice, 0);
+      const favoriteDrink = getFavoriteDrink(userOrders);
+
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        walletBalance: user.walletBalance,
+        lenPoints: user.lenPoints,
+        tier: user.tier,
+        createdAt: user.createdAt,
+        totalOrders: userOrders.length,
+        totalSpent,
+        favoriteDrink
+      };
+    });
+
+    // Apply Search Filter (Name, Email, Phone)
+    if (search) {
+      customers = customers.filter(c => 
+        c.name.toLowerCase().includes(search) ||
+        c.email.toLowerCase().includes(search) ||
+        c.phone.includes(search)
+      );
+    }
+
+    // Apply Tier Filter
+    if (tierFilter !== "all") {
+      customers = customers.filter(c => c.tier === tierFilter);
+    }
+
+    // Apply Spending Filter
+    if (spendFilter !== "all") {
+      if (spendFilter === "under100") {
+        customers = customers.filter(c => c.totalSpent < 100000);
+      } else if (spendFilter === "100to500") {
+        customers = customers.filter(c => c.totalSpent >= 100000 && c.totalSpent <= 500000);
+      } else if (spendFilter === "over500") {
+        customers = customers.filter(c => c.totalSpent > 500000);
+      }
+    }
+
+    res.json(customers);
+  } catch (error) {
+    console.error("Error getting customers list:", error);
+    res.status(500).json({ error: "Lỗi tải danh sách khách hàng." });
+  }
+});
+
+// API: Get 360-degree profile of a single customer
+router.get("/customers/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const allUsers = await getAllUsers();
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) {
+      return res.status(404).json({ error: "Không tìm thấy khách hàng này!" });
+    }
+
+    const allOrders = await getAllOrdersGlobal();
+    const allTransactions = await getAllTransactionsGlobal();
+
+    const userOrders = allOrders.filter(o => o.userId === userId);
+    const userTransactions = allTransactions.filter(t => t.userId === userId);
+
+    // Calculate product preferences
+    const productCounts: Record<string, { name: string; count: number; category: string }> = {};
+    userOrders.forEach(o => {
+      o.items.forEach(item => {
+        const prodId = item.productId;
+        if (!productCounts[prodId]) {
+          productCounts[prodId] = {
+            name: item.product.name.vi,
+            count: 0,
+            category: item.product.category
+          };
+        }
+        productCounts[prodId].count += item.quantity || 1;
+      });
+    });
+
+    const preferences = Object.values(productCounts).sort((a, b) => b.count - a.count);
+    const totalSpent = userOrders.reduce((sum, o) => sum + o.totalPrice, 0);
+
+    const { password: _, ...safeUser } = user;
+
+    res.json({
+      user: safeUser,
+      stats: {
+        totalSpent,
+        totalOrders: userOrders.length,
+        averageOrderValue: userOrders.length > 0 ? Math.round(totalSpent / userOrders.length) : 0,
+        favoriteDrink: getFavoriteDrink(userOrders)
+      },
+      preferences,
+      orders: userOrders,
+      transactions: userTransactions
+    });
+  } catch (error) {
+    console.error("Error getting customer details:", error);
+    res.status(500).json({ error: "Lỗi tải thông tin chi tiết khách hàng." });
+  }
+});
+
+// API: Get global system analytics
+router.get("/analytics", async (req, res) => {
+  try {
+    const allUsers = await getAllUsers();
+    const allOrders = await getAllOrdersGlobal();
+
+    const totalRevenue = allOrders.reduce((sum, o) => sum + o.totalPrice, 0);
+    const totalPointsIssued = allUsers.reduce((sum, u) => sum + u.lenPoints, 0);
+
+    // Tier distribution
+    const tiers = { Welcome: 0, Green: 0, Gold: 0 };
+    allUsers.forEach(u => {
+      if (u.tier in tiers) {
+        tiers[u.tier as keyof typeof tiers]++;
+      }
+    });
+
+    // Top selling products
+    const productCounts: Record<string, { name: string; count: number; revenue: number; image: string }> = {};
+    allOrders.forEach(o => {
+      o.items.forEach(item => {
+        const prodId = item.productId;
+        if (!productCounts[prodId]) {
+          productCounts[prodId] = {
+            name: item.product.name.vi,
+            count: 0,
+            revenue: 0,
+            image: item.product.image
+          };
+        }
+        productCounts[prodId].count += item.quantity || 1;
+        productCounts[prodId].revenue += (item.product.priceVND * (item.size === 'L' ? 1.2 : item.size === 'M' ? 1.1 : 1.0) + (item.toppings.length * 5000)) * item.quantity;
+      });
+    });
+
+    const topProducts = Object.values(productCounts)
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    res.json({
+      summary: {
+        totalCustomers: allUsers.length,
+        totalOrders: allOrders.length,
+        totalRevenue,
+        totalPointsIssued,
+        averageOrderValue: allOrders.length > 0 ? Math.round(totalRevenue / allOrders.length) : 0
+      },
+      tierDistribution: tiers,
+      topProducts
+    });
+  } catch (error) {
+    console.error("Error getting system analytics:", error);
+    res.status(500).json({ error: "Lỗi tải thống kê hệ thống." });
+  }
+});
+
+// API: Seeding 50+ Detailed Customers and purchase history (Automation)
+router.post("/seed-data", async (req, res) => {
+  console.log("[Seed] Starting data seeding process...");
+  
+  const vnFirstNames = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô", "Dương", "Lý"];
+  const vnMiddleNames = ["Văn", "Thị", "Minh", "Anh", "Đức", "Hải", "Tuấn", "Hoài", "Ngọc", "Xuân", "Thanh", "Quốc", "Hữu", "Khánh", "Phương", "Trọng"];
+  const vnLastNames = ["Anh", "Dũng", "Hùng", "Cường", "Trang", "Linh", "Hương", "Lan", "Nam", "Bình", "Sơn", "Long", "Phúc", "Tâm", "Vy", "Hà", "Tuấn", "Minh", "Đông"];
+
+  const randomItem = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+  const randomRange = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min;
+
+  try {
+    const createdUsers: UserRecord[] = [];
+
+    // Create 50 Mock Customers
+    for (let i = 1; i <= 52; i++) {
+      const name = `${randomItem(vnFirstNames)} ${randomItem(vnMiddleNames)} ${randomItem(vnLastNames)}`;
+      const email = `customer.${i}.${Math.random().toString(36).substring(2, 5)}@gmail.com`.toLowerCase();
+      const phone = `09${randomRange(10000000, 99999999)}`;
+      const userId = `u-seed-${1000 + i}`;
+
+      // Distribute Tiers and balances realistically
+      let tier: "Welcome" | "Green" | "Gold" = "Welcome";
+      let lenPoints = randomRange(0, 15000);
+      let walletBalance = randomRange(0, 150000);
+
+      const tierRoll = Math.random();
+      if (tierRoll > 0.88) {
+        tier = "Gold";
+        lenPoints = randomRange(50000, 180000);
+        walletBalance = randomRange(100000, 850000);
+      } else if (tierRoll > 0.6) {
+        tier = "Green";
+        lenPoints = randomRange(20000, 48000);
+        walletBalance = randomRange(30000, 450000);
+      }
+
+      const joinDaysAgo = randomRange(1, 45);
+      const createdAt = new Date(Date.now() - joinDaysAgo * 24 * 60 * 60 * 1000).toISOString();
+
+      const user: UserRecord = {
+        id: userId,
+        name,
+        email,
+        phone,
+        walletBalance,
+        lenPoints,
+        tier,
+        createdAt
+      };
+
+      await createUser(user);
+      createdUsers.push(user);
+
+      // Generate 1 to 7 Orders for this customer
+      const orderCount = randomRange(1, 7);
+      for (let j = 1; j <= orderCount; j++) {
+        const orderId = `MEL-SEED-${userId.split("-")[2]}-${j}`;
+        
+        // Choose 1 to 3 random products
+        const itemCount = randomRange(1, 3);
+        const orderItems: any[] = [];
+        let totalPriceVND = 0;
+
+        for (let k = 0; k < itemCount; k++) {
+          const prod = randomItem(products);
+          const size = randomItem(["S", "M", "L"]) as "S" | "M" | "L";
+          const qty = randomRange(1, 2);
+          
+          const sizeMultiplier = size === 'L' ? 1.2 : size === 'M' ? 1.1 : 1.0;
+          const toppingsCost = randomRange(0, 2) * 5000;
+          const itemCost = Math.round((prod.priceVND * sizeMultiplier) + toppingsCost);
+          
+          orderItems.push({
+            id: `item-${j}-${k}-${Math.random().toString(36).substring(2, 5)}`,
+            productId: prod.id,
+            product: prod,
+            size,
+            ice: randomItem(["50%", "100%"]),
+            sugar: randomItem(["50%", "100%"]),
+            toppings: toppingsCost > 0 ? ["Trân châu hoàng kim"] : [],
+            quantity: qty,
+            note: ""
+          });
+
+          totalPriceVND += itemCost * qty;
+        }
+
+        const orderDate = new Date(new Date(createdAt).getTime() + randomRange(1, joinDaysAgo) * 24 * 60 * 60 * 1000).toISOString();
+        const pointsEarned = Math.round(totalPriceVND * 0.1);
+
+        const order: OrderRecord = {
+          id: orderId,
+          userId,
+          items: orderItems,
+          totalPrice: totalPriceVND,
+          currency: "VND",
+          pointsEarned,
+          pointsUsed: 0,
+          paymentMethod: randomItem(["wallet", "vietqr", "cash"]),
+          status: "completed",
+          date: new Date(orderDate).toLocaleString()
+        };
+
+        await createOrder(order);
+      }
+
+      // Generate 1 to 3 Top-up Transactions
+      const txCount = randomRange(1, 3);
+      for (let t = 1; t <= txCount; t++) {
+        const txId = `TX-SEED-${userId.split("-")[2]}-${t}`;
+        const amountVND = randomItem([50000, 100000, 200000, 500000]);
+        const txDate = new Date(new Date(createdAt).getTime() + randomRange(0, joinDaysAgo) * 24 * 60 * 60 * 1000).toISOString();
+
+        const tx: TransactionRecord = {
+          id: txId,
+          userId,
+          type: "topup",
+          amountVND,
+          paymentMethod: randomItem(["VietQR_Transfer", "Napas_CreditCard"]),
+          status: "success",
+          date: new Date(txDate).toLocaleString()
+        };
+
+        await createTransaction(tx);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: `Đã nạp thành công bộ dữ liệu lớn gồm ${createdUsers.length} khách hàng VIP, cùng hơn 200 đơn hàng và giao dịch nạp ví thực tế!`
+    });
+  } catch (err) {
+    console.error("Failed to seed database:", err);
+    res.status(500).json({ error: "Lỗi hệ thống trong quá trình tạo dữ liệu lớn giả lập." });
+  }
+});
+
+export default router;
