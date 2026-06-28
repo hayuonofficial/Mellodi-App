@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { translations } from '../translations';
-import { Smartphone, ArrowLeft, Wallet, Award, ShoppingBag, Sparkles, Compass } from 'lucide-react';
+import { Smartphone, ArrowLeft, Wallet, Award, ShoppingBag, Compass, X, Share2, PlusSquare } from 'lucide-react';
 
 interface AppDownloadGateProps {
   onBackToWeb: () => void;
@@ -10,6 +10,44 @@ interface AppDownloadGateProps {
 
 export const AppDownloadGate: React.FC<AppDownloadGateProps> = ({ onBackToWeb, onSimulateApp }) => {
   const { language } = useApp();
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showiOSModal, setShowiOSModal] = useState(false);
+
+  // Listen for the PWA install prompt
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstallClick = async () => {
+    // Check if the device is iOS (iPhone/iPad/iPod)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    if (isIOS) {
+      setShowiOSModal(true);
+      return;
+    }
+
+    if (!deferredPrompt) {
+      // Fallback for browsers that don't support or have already installed
+      alert(
+        language === 'vi'
+          ? 'Ứng dụng đã được cài đặt hoặc trình duyệt của bạn không hỗ trợ cài đặt tự động. Vui lòng thêm thủ công vào màn hình chính!'
+          : language === 'ko'
+          ? '앱이 이미 설치되었거나 브라우저가 자동 설치를 지원하지 않습니다. 홈 화면에 수동으로 추가해 주세요!'
+          : 'App is already installed or your browser does not support auto-install. Please add to home screen manually!'
+      );
+      return;
+    }
+
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`[PWA] User choice outcome: ${outcome}`);
+    setDeferredPrompt(null);
+  };
 
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F6] text-stone-850 p-6 font-sans relative overflow-hidden">
@@ -59,7 +97,7 @@ export const AppDownloadGate: React.FC<AppDownloadGateProps> = ({ onBackToWeb, o
               </div>
               <div className="text-left">
                 <p className="font-bold text-coffee-950">{translations[language]['gate.item.1.title']}</p>
-                <p className="text-[10px] text-stone-455">{translations[language]['gate.item.1.desc']}</p>
+                <p className="text-[10px] text-stone-500">{translations[language]['gate.item.1.desc']}</p>
               </div>
             </div>
 
@@ -69,7 +107,7 @@ export const AppDownloadGate: React.FC<AppDownloadGateProps> = ({ onBackToWeb, o
               </div>
               <div className="text-left">
                 <p className="font-bold text-coffee-950">{translations[language]['gate.item.2.title']}</p>
-                <p className="text-[10px] text-stone-455">{translations[language]['gate.item.2.desc']}</p>
+                <p className="text-[10px] text-stone-500">{translations[language]['gate.item.2.desc']}</p>
               </div>
             </div>
 
@@ -79,7 +117,7 @@ export const AppDownloadGate: React.FC<AppDownloadGateProps> = ({ onBackToWeb, o
               </div>
               <div className="text-left">
                 <p className="font-bold text-coffee-950">{translations[language]['gate.item.3.title']}</p>
-                <p className="text-[10px] text-stone-455">{translations[language]['gate.item.3.desc']}</p>
+                <p className="text-[10px] text-stone-500">{translations[language]['gate.item.3.desc']}</p>
               </div>
             </div>
 
@@ -89,13 +127,26 @@ export const AppDownloadGate: React.FC<AppDownloadGateProps> = ({ onBackToWeb, o
               </div>
               <div className="text-left">
                 <p className="font-bold text-coffee-950">{translations[language]['gate.item.4.title']}</p>
-                <p className="text-[10px] text-stone-455">{translations[language]['gate.item.4.desc']}</p>
+                <p className="text-[10px] text-stone-500">{translations[language]['gate.item.4.desc']}</p>
               </div>
             </div>
           </div>
 
           {/* Download buttons */}
           <div className="flex flex-wrap gap-3 pt-4">
+            {/* Install PWA Button - Colored Gold to stand out */}
+            <button
+              onClick={handleInstallClick}
+              className="bg-amber-400 text-[#3E2723] hover:bg-amber-500 px-4 py-2.5 rounded-xl flex items-center space-x-2.5 cursor-pointer transition-all border border-amber-350 shadow-sm min-w-[180px] justify-center font-bold"
+            >
+              <Smartphone className="w-4.5 h-4.5 shrink-0 text-[#3E2723]" />
+              <div className="text-left">
+                <span className="text-[10px] font-black block leading-tight">
+                  {language === 'vi' ? 'CÀI ĐẶT TRỰC TIẾP' : language === 'ko' ? '앱 즉시 설치' : 'INSTALL DIRECTLY (PWA)'}
+                </span>
+              </div>
+            </button>
+
             {/* Mock App Store */}
             <div className="bg-stone-900 text-white px-4 py-2.5 rounded-xl flex items-center space-x-2.5 cursor-pointer hover:bg-stone-950 transition-all border border-stone-800 shadow-sm min-w-[180px] justify-center">
               <svg className="w-4.5 h-4.5 fill-current text-white shrink-0" viewBox="0 0 24 24">
@@ -151,6 +202,79 @@ export const AppDownloadGate: React.FC<AppDownloadGateProps> = ({ onBackToWeb, o
       <footer className="max-w-4xl mx-auto w-full border-t border-coffee-100 pt-6 text-center text-[10px] text-stone-400">
         <p>{translations[language]['gate.footer']}</p>
       </footer>
+
+      {/* iOS Safari Installation Guide Modal */}
+      {showiOSModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full border border-coffee-100 shadow-2xl relative text-left space-y-5">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowiOSModal(false)}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <X className="w-4 h-4 text-stone-600" />
+            </button>
+
+            <div className="space-y-1">
+              <h3 className="font-serif text-lg font-bold text-coffee-950">
+                {language === 'vi' ? 'Cài đặt trên iPhone/iPad' : language === 'ko' ? 'iPhone/iPad 설치 안내' : 'Install on iPhone/iPad'}
+              </h3>
+              <p className="text-[11px] text-stone-400 leading-normal">
+                {language === 'vi' 
+                  ? 'Safari trên iOS không hỗ trợ tự động tải. Hãy làm theo hướng dẫn 3 bước đơn giản dưới đây:' 
+                  : language === 'ko' 
+                  ? 'iOS Safari는 자동 설치를 지원하지 않습니다. 아래 3단계에 따라 홈 화면에 추가해 주세요:'
+                  : 'Safari on iOS does not support auto-install. Follow these 3 simple steps:'}
+              </p>
+            </div>
+
+            <div className="space-y-4 text-xs font-medium text-stone-600">
+              <div className="flex items-start space-x-3.5 bg-stone-50 p-3 rounded-2xl border border-stone-200/40">
+                <div className="w-7 h-7 rounded-lg bg-amber-100 text-[#4E342E] flex items-center justify-center font-bold shrink-0">1</div>
+                <div className="leading-relaxed">
+                  <p className="text-coffee-950 font-bold">
+                    {language === 'vi' ? 'Nhấp nút Chia sẻ' : language === 'ko' ? '공유 버튼 클릭' : 'Tap the Share button'}
+                  </p>
+                  <p className="text-[10px] text-stone-400 mt-0.5 flex items-center">
+                    {language === 'vi' ? 'Biểu tượng' : language === 'ko' ? '아이콘' : 'Icon'} <Share2 className="w-3.5 h-3.5 mx-1 text-blue-500" /> {language === 'vi' ? 'ở thanh công cụ của Safari.' : language === 'ko' ? '을 누르세요.' : 'in Safari toolbar.'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3.5 bg-stone-50 p-3 rounded-2xl border border-stone-200/40">
+                <div className="w-7 h-7 rounded-lg bg-amber-100 text-[#4E342E] flex items-center justify-center font-bold shrink-0">2</div>
+                <div className="leading-relaxed">
+                  <p className="text-coffee-950 font-bold">
+                    {language === 'vi' ? 'Thêm vào Màn hình chính' : language === 'ko' ? '홈 화면에 추가 선택' : 'Add to Home Screen'}
+                  </p>
+                  <p className="text-[10px] text-stone-400 mt-0.5 flex items-center flex-wrap">
+                    {language === 'vi' ? 'Cuộn xuống và chọn' : language === 'ko' ? '아래로 스크롤하여' : 'Scroll down and select'} <PlusSquare className="w-3.5 h-3.5 mx-1 text-stone-700" /> <strong>"{language === 'vi' ? 'Thêm vào MH chính' : language === 'ko' ? '홈 화면에 추가' : 'Add to Home Screen'}"</strong>.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3.5 bg-stone-50 p-3 rounded-2xl border border-stone-200/40">
+                <div className="w-7 h-7 rounded-lg bg-amber-100 text-[#4E342E] flex items-center justify-center font-bold shrink-0">3</div>
+                <div className="leading-relaxed">
+                  <p className="text-coffee-950 font-bold">
+                    {language === 'vi' ? 'Xác nhận Thêm' : language === 'ko' ? '추가 완료' : 'Tap Add to confirm'}
+                  </p>
+                  <p className="text-[10px] text-stone-400 mt-0.5">
+                    {language === 'vi' ? 'Nhấn nút "Thêm" ở góc trên cùng bên phải.' : language === 'ko' ? '우측 상단의 "추가" 버튼을 누르세요.' : 'Tap the "Add" button in the top-right corner.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowiOSModal(false)}
+              className="w-full py-3 bg-[#4E342E] hover:bg-[#3E2723] text-white text-xs font-bold rounded-xl transition-all text-center cursor-pointer"
+            >
+              {language === 'vi' ? 'Đã hiểu' : language === 'ko' ? '확인' : 'Got it'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

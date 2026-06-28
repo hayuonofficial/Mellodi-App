@@ -300,20 +300,54 @@ function AppContent() {
     return (
       <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F6] text-stone-850 font-sans">
         {/* Web Header */}
-        <header className="sticky top-0 z-45 bg-white/95 backdrop-blur-md border-b border-coffee-100 py-4 px-6 shadow-xs">
-          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-9 h-9 rounded-full bg-[#4E342E] text-white flex items-center justify-center font-serif font-bold text-lg italic">M</div>
-              <div className="text-left">
-                <span className="font-serif text-xl font-bold tracking-tight text-coffee-950 block">MELLODI</span>
-                <span className="text-[9px] tracking-wider text-coffee-600 uppercase font-medium -mt-1 block">
-                  {translations[language]['brand.tagline']}
-                </span>
+        <header className="sticky top-0 z-45 bg-white/95 backdrop-blur-md border-b border-coffee-100 py-3.5 px-4 sm:px-6 shadow-xs">
+          <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
+            
+            {/* Top Row: Logo on left, Actions on right (on mobile) */}
+            <div className="flex justify-between items-center w-full md:w-auto">
+              {/* Logo */}
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8.5 h-8.5 rounded-full bg-[#4E342E] text-white flex items-center justify-center font-serif font-bold text-base italic">M</div>
+                <div className="text-left">
+                  <span className="font-serif text-lg font-bold tracking-tight text-coffee-950 block leading-none">MELLODI</span>
+                  <span className="text-[8px] tracking-wider text-coffee-600 uppercase font-medium mt-1 block">
+                    {translations[language]['brand.tagline']}
+                  </span>
+                </div>
+              </div>
+
+              {/* Mobile Actions (Language & Portal) - hidden on desktop */}
+              <div className="flex items-center space-x-2 md:hidden">
+                <div className="flex items-center bg-stone-100 border border-stone-200 rounded-xl p-0.5 scale-90">
+                  {[
+                    { code: 'vi', label: 'VI' },
+                    { code: 'en', label: 'EN' },
+                    { code: 'ko', label: 'KO' }
+                  ].map((lang) => (
+                    <button
+                      key={lang.code}
+                      onClick={() => setLanguage(lang.code as any)}
+                      className={`px-2 py-0.5 rounded-lg text-[9px] font-black transition-all cursor-pointer ${
+                        language === lang.code
+                          ? 'bg-[#4E342E] text-white shadow-xs'
+                          : 'text-stone-500 hover:text-stone-850'
+                      }`}
+                    >
+                      {lang.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowDownloadGate(true)}
+                  className="px-3 py-1.5 bg-[#4E342E] hover:bg-[#3E2723] text-white text-[10px] font-bold rounded-lg shadow-xs transition-all cursor-pointer"
+                >
+                  {translations[language]['landing.promo.btn']}
+                </button>
               </div>
             </div>
 
-            {/* Taskbar Navigation Links */}
-            <nav className="flex items-center space-x-1 sm:space-x-4">
+            {/* Middle Row: Navigation Links (Scrollable on mobile) */}
+            <nav className="flex items-center space-x-1 overflow-x-auto scrollbar-none py-1 -my-1 justify-start md:justify-center w-full md:w-auto flex-nowrap md:flex-wrap">
               {[
                 { id: 'home', label: translations[language]['nav.home'] },
                 { id: 'story', label: translations[language]['landing.story.tag'] },
@@ -324,10 +358,10 @@ function AppContent() {
                 <button
                   key={item.id}
                   onClick={() => setActiveWebSection(item.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer shrink-0 ${
                     activeWebSection === item.id 
                       ? 'bg-[#4E342E] text-white shadow-xs' 
-                      : 'text-stone-555 hover:bg-stone-100 hover:text-stone-850'
+                      : 'text-stone-500 hover:bg-stone-100 hover:text-stone-850'
                   }`}
                 >
                   {item.label}
@@ -335,8 +369,8 @@ function AppContent() {
               ))}
             </nav>
 
-            {/* Language Switcher & Member Portal Button */}
-            <div className="flex items-center space-x-3">
+            {/* Desktop Actions (Language & Portal) - hidden on mobile */}
+            <div className="hidden md:flex items-center space-x-3">
               <div className="flex items-center bg-stone-100 border border-stone-200 rounded-xl p-0.5">
                 {[
                   { code: 'vi', label: 'VI' },
@@ -424,22 +458,22 @@ function AppContent() {
         </div>
 
         {/* Scrollable app screen inside the phone */}
-        <div className="flex-1 overflow-y-auto bg-[#FAF9F6] text-coffee-950 flex flex-col justify-between relative scrollbar-none">
-          {/* Upper Navigation inside Simulator */}
-          <Navbar activeTab={activeTab} setActiveTab={handleTabChange} />
+        <div className="flex-grow overflow-y-auto bg-[#FAF9F6] text-coffee-950 flex flex-col justify-between relative scrollbar-none">
+          {/* Upper Navigation inside Simulator - Only shown when logged in */}
+          {currentUser && <Navbar activeTab={activeTab} setActiveTab={handleTabChange} />}
 
           {/* Floating location geofence promotions notifier */}
-          <NotificationToast />
+          {currentUser && <NotificationToast />}
 
           {/* Primary body view content */}
-          <main className="flex-grow p-4">
+          <main className="flex-grow p-4 flex flex-col justify-center">
             <AnimatePresence mode="wait">
               {renderActiveSection()}
             </AnimatePresence>
           </main>
 
-          {/* Localized branding footer */}
-          <Footer />
+          {/* Localized branding footer - Only shown when logged in */}
+          {currentUser && <Footer />}
 
           {/* App AI Chatbot */}
           <AIChatbot mode="app" />
