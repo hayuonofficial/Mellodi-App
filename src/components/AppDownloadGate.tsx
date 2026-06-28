@@ -5,10 +5,9 @@ import { Smartphone, ArrowLeft, Wallet, Award, ShoppingBag, Compass, X, Share2, 
 
 interface AppDownloadGateProps {
   onBackToWeb: () => void;
-  onSimulateApp: () => void;
 }
 
-export const AppDownloadGate: React.FC<AppDownloadGateProps> = ({ onBackToWeb, onSimulateApp }) => {
+export const AppDownloadGate: React.FC<AppDownloadGateProps> = ({ onBackToWeb }) => {
   const { language } = useApp();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showiOSModal, setShowiOSModal] = useState(false);
@@ -183,15 +182,10 @@ export const AppDownloadGate: React.FC<AppDownloadGateProps> = ({ onBackToWeb, o
               </div>
             </div>
 
-            <div className="space-y-3 pt-2">
-              <p className="text-[10px] text-stone-400">{translations[language]['gate.simulate.ask']}</p>
-              <button
-                onClick={onSimulateApp}
-                className="w-full py-3 px-4 bg-[#4E342E] hover:bg-[#3E2723] text-white text-xs font-bold rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center space-x-2 cursor-pointer"
-              >
-                <Smartphone className="w-4 h-4" />
-                <span>{translations[language]['gate.simulate.btn']}</span>
-              </button>
+            <div className="pt-2 text-[10px] text-stone-400 leading-normal">
+              {language === 'vi' ? 'Quét mã bằng camera điện thoại để truy cập nhanh Mellodi và tiến hành cài đặt ứng dụng.' : 
+               language === 'ko' ? '휴대폰 카메라로 QR 코드를 스캔하여 Mellodi에 접속하고 앱을 설치하세요.' :
+               'Scan the QR code with your phone camera to access Mellodi and install the app.'}
             </div>
           </div>
         </div>

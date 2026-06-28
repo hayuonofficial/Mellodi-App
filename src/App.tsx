@@ -28,17 +28,21 @@ function AppContent() {
   const [activeTab, setActiveTab] = useState<string>('home');
   const { currentUser, isLoading, tierUpgradeInfo, setTierUpgradeInfo, language, setLanguage } = useApp();
   const [splashDone, setSplashDone] = useState(false);
-  const [isMobileAppSimulated, setIsMobileAppSimulated] = useState<boolean>(false);
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
   const [showDownloadGate, setShowDownloadGate] = useState<boolean>(false);
   const [activeWebSection, setActiveWebSection] = useState<string>('home');
 
-  const handleTabChange = (tab: string) => {
-    if (!isMobileAppSimulated && tab !== 'home') {
-      setShowDownloadGate(true);
-    } else {
-      setActiveTab(tab);
-    }
-  };
+  React.useEffect(() => {
+    const checkIfMobile = () => {
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+      const isSmallScreen = window.innerWidth < 768;
+      setIsMobileDevice(isStandalone || isSmallScreen);
+    };
+
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -282,21 +286,15 @@ function AppContent() {
         return null;
     }
   };
-
   if (showDownloadGate) {
     return (
       <AppDownloadGate 
         onBackToWeb={() => setShowDownloadGate(false)} 
-        onSimulateApp={() => { 
-          setIsMobileAppSimulated(true); 
-          setShowDownloadGate(false); 
-          setActiveTab('home');
-        }} 
       />
     );
   }
 
-  if (!isMobileAppSimulated) {
+  if (!isMobileDevice) {
     return (
       <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F6] text-stone-850 font-sans">
         {/* Web Header */}
@@ -412,79 +410,28 @@ function AppContent() {
     );
   }
 
-  // Simulated Mobile App Mode
+  // Native Mobile PWA View
   return (
-    <div className="min-h-screen bg-stone-900 flex flex-col items-center justify-center p-4 sm:p-8 overflow-y-auto font-sans relative">
+    <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F6] text-coffee-950 relative overflow-x-hidden font-sans">
       
-      {/* Background ambient lighting */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#4E342E]/20 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-[#A37B45]/10 rounded-full blur-3xl pointer-events-none"></div>
+      {/* Upper Navigation inside Mobile App - Only shown when logged in */}
+      {currentUser && <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />}
 
-      {/* Control panel outside the phone */}
-      <div className="mb-6 z-10 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-        <div>
-          <div className="inline-flex items-center space-x-1.5 bg-amber-550/10 border border-amber-550/20 px-3 py-1.5 rounded-full text-[10px] font-bold text-amber-400">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-            <span>{translations[language]['simulator.active']}</span>
-          </div>
-          <h2 className="text-white font-serif text-lg font-bold mt-1">Mellodi Mobile Simulator</h2>
-        </div>
-        <button
-          onClick={() => {
-            setIsMobileAppSimulated(false);
-            setActiveTab('home');
-          }}
-          className="px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs font-bold rounded-xl transition-all cursor-pointer"
-        >
-          {translations[language]['simulator.exit']}
-        </button>
-      </div>
+      {/* Floating location geofence promotions notifier */}
+      {currentUser && <NotificationToast />}
 
-      {/* The Smartphone Frame container */}
-      <div className="relative w-full max-w-[390px] aspect-[9/19.5] bg-stone-950 border-[10px] border-[#4E342E] rounded-[48px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col z-10">
-        
-        {/* Dynamic Island Notch */}
-        <div className="absolute top-3.5 left-1/2 -translate-x-1/2 w-24 h-5.5 bg-black rounded-full z-50 flex items-center justify-center">
-          <div className="w-2 h-2 rounded-full bg-stone-900 absolute right-4"></div>
-        </div>
+      {/* Primary body view content */}
+      <main className="flex-grow p-4 flex flex-col justify-center">
+        <AnimatePresence mode="wait">
+          {renderActiveSection()}
+        </AnimatePresence>
+      </main>
 
-        {/* Mobile Status Bar */}
-        <div className="bg-white text-stone-950 px-6 pt-3.5 pb-1 flex justify-between items-center text-[9px] font-bold z-40 shrink-0 border-b border-stone-100">
-          <span>9:41</span>
-          <div className="flex items-center space-x-1.5">
-            <span>📶</span>
-            <span>🔋</span>
-          </div>
-        </div>
+      {/* Localized branding footer - Only shown when logged in */}
+      {currentUser && <Footer />}
 
-        {/* Scrollable app screen inside the phone */}
-        <div className="flex-grow overflow-y-auto bg-[#FAF9F6] text-coffee-950 flex flex-col justify-between relative scrollbar-none">
-          {/* Upper Navigation inside Simulator - Only shown when logged in */}
-          {currentUser && <Navbar activeTab={activeTab} setActiveTab={handleTabChange} />}
-
-          {/* Floating location geofence promotions notifier */}
-          {currentUser && <NotificationToast />}
-
-          {/* Primary body view content */}
-          <main className="flex-grow p-4 flex flex-col justify-center">
-            <AnimatePresence mode="wait">
-              {renderActiveSection()}
-            </AnimatePresence>
-          </main>
-
-          {/* Localized branding footer - Only shown when logged in */}
-          {currentUser && <Footer />}
-
-          {/* App AI Chatbot */}
-          <AIChatbot mode="app" />
-        </div>
-
-        {/* Home Indicator Bar */}
-        <div className="bg-white py-2 flex justify-center items-center z-40 shrink-0 border-t border-stone-150">
-          <div className="w-32 h-1 bg-stone-300 rounded-full"></div>
-        </div>
-
-      </div>
+      {/* App AI Chatbot */}
+      <AIChatbot mode="app" />
 
       {/* Tier Upgrade Celebration Modal */}
       <AnimatePresence>
