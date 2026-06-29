@@ -14,6 +14,12 @@ export interface AppUser {
   createdAt: string;
   biometricEnabled?: boolean;
   biometricToken?: string;
+  nfcCard?: {
+    cardId: string;
+    status: 'active' | 'suspended';
+    linkedAt: string;
+    secretKey: string;
+  };
 }
 
 interface AppContextProps {

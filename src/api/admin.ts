@@ -72,7 +72,8 @@ router.get("/customers", async (req, res) => {
         createdAt: user.createdAt,
         totalOrders: userOrders.length,
         totalSpent,
-        favoriteDrink
+        favoriteDrink,
+        nfcCard: user.nfcCard
       };
     });
 

@@ -5,7 +5,7 @@ import {
   Coffee, MapPin, Star, BookOpen, 
   ArrowRight, Compass, Phone, Mail, Clock, Building, X,
   Award, Wallet, CreditCard, Gift, History, Plus, Ticket, Check,
-  GraduationCap, Send, Sparkles
+  GraduationCap, Send, Sparkles, Lock, Unlock, Wifi, Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthPortal } from './AuthPortal';
@@ -13,6 +13,30 @@ import { AuthPortal } from './AuthPortal';
 interface BrandLandingPageProps {
   activeSection: string;
   onOpenApp: () => void;
+}
+
+const API_BASE_URL = window.location.origin + '/api';
+
+// Helper to generate HMAC signature using browser Web Crypto API
+async function generateHmacSignature(secretKey: string, message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secretKey);
+  const messageData = encoder.encode(message);
+  const cryptoKey = await window.crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signatureBuffer = await window.crypto.subtle.sign(
+    "HMAC",
+    cryptoKey,
+    messageData
+  );
+  return Array.from(new Uint8Array(signatureBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 }
 
 export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSection, onOpenApp }) => {
@@ -25,7 +49,8 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
     vouchers, 
     claimVoucherByCode, 
     topUpWallet,
-    formatPrice
+    formatPrice,
+    setCurrentUser
   } = useApp();
   
   // State for 3D tilt effect on menu cards
@@ -42,6 +67,13 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
   const [topUpAmount, setTopUpAmount] = useState<number>(50000);
   const [topUpStatus, setTopUpStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [isTopUpLoading, setIsTopUpLoading] = useState(false);
+
+  // States for NFC Simulation
+  const [isNfcSimModalOpen, setIsNfcSimModalOpen] = useState(false);
+  const [nfcSimState, setNfcSimState] = useState<'idle' | 'linking' | 'tapping' | 'success' | 'error'>('idle');
+  const [nfcSimMessage, setNfcSimMessage] = useState('');
+  const [simCardId, setSimCardId] = useState('');
+  const [handshakeLogs, setHandshakeLogs] = useState<string[]>([]);
 
   // States for Study Abroad consultation
   const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
@@ -929,16 +961,149 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                       <span>{isTopUpLoading ? 'Đang xử lý...' : 'Xác nhận nạp tiền'}</span>
                     </button>
 
-                    {topUpStatus && (
-                      <div className={`p-2 rounded-xl text-[10px] font-semibold border text-center mt-2 ${
-                        topUpStatus.success 
-                          ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
-                          : 'bg-rose-50 border-rose-100 text-rose-800'
-                      }`}>
-                        {topUpStatus.message}
-                      </div>
-                    )}
                   </div>
+                </div>
+
+                {/* NFC Card Management (NTAG215) */}
+                <div className="bg-white border border-coffee-100 rounded-3xl p-6 shadow-2xs space-y-5 text-left">
+                  <h4 className="font-serif text-sm font-bold text-coffee-950 flex items-center justify-between">
+                    <span className="flex items-center space-x-2">
+                      <CreditCard className="w-4 h-4 text-[#A37B45]" />
+                      <span>Thẻ Vật Lý NFC NTAG215</span>
+                    </span>
+                    <span className="text-[9px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Secure NDEF</span>
+                  </h4>
+
+                  {currentUser?.nfcCard ? (
+                    <div className="space-y-4">
+                      {/* Premium Card Display */}
+                      <div className={`relative p-5 rounded-2xl border transition-all duration-300 overflow-hidden ${
+                        currentUser.nfcCard.status === 'active'
+                          ? 'bg-gradient-to-br from-stone-900 via-stone-850 to-stone-950 text-white border-stone-800 shadow-md'
+                          : 'bg-gradient-to-br from-stone-150 to-stone-250 text-stone-400 border-stone-300 opacity-75'
+                      }`}>
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="text-[8px] font-bold tracking-widest uppercase text-[#A37B45]">Mellodi Contactless</span>
+                            <span className="block font-serif font-bold text-xs mt-0.5">NTAG215 PASS</span>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className={`w-2.5 h-2.5 rounded-full ${currentUser.nfcCard.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
+                            <span className="text-[7px] uppercase tracking-wider mt-1">{currentUser.nfcCard.status === 'active' ? 'Đang hoạt động' : 'Đã khóa'}</span>
+                          </div>
+                        </div>
+
+                        <div className="my-5 flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center border border-white/10">
+                            <Wifi className="w-4 h-4 rotate-90 text-amber-300" />
+                          </div>
+                          <div>
+                            <span className="text-[8px] text-stone-400 block uppercase font-mono">Card UID</span>
+                            <span className="font-mono text-xs tracking-wider font-semibold">{currentUser.nfcCard.cardId}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex justify-between items-end text-[8px] text-stone-450">
+                          <div>
+                            <span className="text-stone-400">HỘI VIÊN:</span>
+                            <span className="block font-bold text-white uppercase mt-0.5">{currentUser.name}</span>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-stone-400">LIÊN KẾT:</span>
+                            <span className="block font-bold text-white mt-0.5">{new Date(currentUser.nfcCard.linkedAt).toLocaleDateString('vi-VN')}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Card Actions */}
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            if (!currentUser?.nfcCard) return;
+                            const newStatus = currentUser.nfcCard.status === 'active' ? 'suspended' : 'active';
+                            const timestamp = Date.now();
+                            const message = `${timestamp}-${newStatus}`;
+                            
+                            const signature = await generateHmacSignature(currentUser.nfcCard.secretKey, message);
+                            
+                            try {
+                              const response = await fetch(`${API_BASE_URL}/users/nfc/status`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  cardId: currentUser.nfcCard.cardId,
+                                  status: newStatus,
+                                  timestamp,
+                                  signature
+                                })
+                              });
+                              const data = await response.json();
+                              if (data.success) {
+                                setCurrentUser(data.user);
+                              } else {
+                                alert(data.error);
+                              }
+                            } catch (err) {
+                              alert('Lỗi kết nối máy chủ!');
+                            }
+                          }}
+                          className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer flex items-center justify-center space-x-1.5 ${
+                            currentUser.nfcCard.status === 'active'
+                              ? 'bg-rose-50 border-rose-100 text-rose-700 hover:bg-rose-100'
+                              : 'bg-emerald-50 border-emerald-100 text-emerald-700 hover:bg-emerald-100'
+                          }`}
+                        >
+                          {currentUser.nfcCard.status === 'active' ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+                          <span>{currentUser.nfcCard.status === 'active' ? 'Khóa thẻ tạm thời' : 'Mở khóa thẻ'}</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setNfcSimState('idle');
+                            setNfcSimMessage('');
+                            setHandshakeLogs([]);
+                            setIsNfcSimModalOpen(true);
+                          }}
+                          className="px-3 py-2 bg-stone-100 hover:bg-stone-200 border border-stone-200 rounded-xl text-stone-700 text-xs font-bold transition-all cursor-pointer flex items-center justify-center"
+                          title="Mô phỏng Chạm thẻ NFC"
+                        >
+                          <Smartphone className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="border border-dashed border-coffee-250 rounded-2xl p-5 text-center space-y-3 bg-stone-50">
+                      <div className="w-10 h-10 rounded-full bg-coffee-50 flex items-center justify-center mx-auto text-[#A37B45]">
+                        <CreditCard className="w-5 h-5" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-bold text-coffee-950">Chưa liên kết thẻ thành viên NFC</p>
+                        <p className="text-[10px] text-stone-500 leading-relaxed max-w-[220px] mx-auto">
+                          Vui lòng mang phôi thẻ NTAG215 đến quầy phục vụ để nhân viên thiết lập và kích hoạt.
+                        </p>
+                      </div>
+                      <div className="pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const randomUid = '04:' + Array.from({length: 6}, () => Math.floor(Math.random()*256).toString(16).padStart(2, '0').toUpperCase()).join(':');
+                            setSimCardId(randomUid);
+                            setNfcSimState('idle');
+                            setNfcSimMessage('');
+                            setHandshakeLogs([]);
+                            setIsNfcSimModalOpen(true);
+                          }}
+                          className="inline-flex items-center space-x-1.5 px-4 py-1.5 bg-coffee-850 hover:bg-coffee-900 text-white text-[10px] font-bold rounded-lg shadow-2xs transition-all cursor-pointer"
+                        >
+                          <Smartphone className="w-3 h-3" />
+                          <span>Mô phỏng tự phát hành thẻ</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
               </div>
@@ -1334,6 +1499,223 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                     )}
                   </button>
                 </form>
+              </div>
+            </motion.div>
+          </div>
+        )}
+        {/* NFC Simulator Modal */}
+        {isNfcSimModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsNfcSimModalOpen(false)}
+              className="absolute inset-0 bg-stone-900/60 backdrop-blur-xs"
+            />
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              className="bg-white rounded-3xl border border-coffee-100 p-6 shadow-2xl max-w-md w-full relative z-10 overflow-hidden text-left"
+            >
+              <button
+                onClick={() => setIsNfcSimModalOpen(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-[#A37B45] uppercase tracking-wider flex items-center space-x-1">
+                    <Smartphone className="w-3.5 h-3.5" />
+                    <span>NFC Simulator Terminal</span>
+                  </span>
+                  <h3 className="font-serif text-base font-bold text-coffee-950">
+                    {currentUser?.nfcCard ? 'Trình mô phỏng Chạm Thẻ NFC' : 'Trình mô phỏng Phát Hành Thẻ NFC'}
+                  </h3>
+                  <p className="text-[10px] text-stone-500">
+                    {currentUser?.nfcCard 
+                      ? 'Mô phỏng quá trình tạo mã xác thực OTP động và chữ ký HMAC-SHA256 để chống giả mạo thẻ vật lý.'
+                      : 'Mô phỏng thiết bị ghi NFC tại quầy để nạp cấu trúc dữ liệu NDEF vào chip NTAG215.'}
+                  </p>
+                </div>
+
+                {!currentUser?.nfcCard ? (
+                  // Link Simulator Form
+                  <div className="space-y-4 pt-2">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Mã UID Thẻ Vật Lý (7-Byte)</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={simCardId}
+                          onChange={(e) => setSimCardId(e.target.value)}
+                          placeholder="04:XX:XX:XX:XX:XX:XX"
+                          className="flex-1 px-3 py-2 bg-stone-50 border border-coffee-100 rounded-xl text-xs font-mono font-bold text-stone-900"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const randomUid = '04:' + Array.from({length: 6}, () => Math.floor(Math.random()*256).toString(16).padStart(2, '0').toUpperCase()).join(':');
+                            setSimCardId(randomUid);
+                          }}
+                          className="px-3 py-2 bg-stone-100 hover:bg-stone-200 border border-stone-200 text-stone-700 text-[10px] font-bold rounded-xl transition-all cursor-pointer"
+                        >
+                          Mã ngẫu nhiên
+                        </button>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={nfcSimState === 'linking'}
+                      onClick={async () => {
+                        if (!simCardId) return;
+                        setNfcSimState('linking');
+                        setHandshakeLogs([]);
+                        const addLog = (msg: string) => setHandshakeLogs(prev => [...prev, msg]);
+                        
+                        addLog("⚡ [Hardware] Đang kết nối với đầu ghi NFC ACR122U...");
+                        await new Promise(r => setTimeout(r, 600));
+                        addLog("📡 [NFC] Phát hiện chip NTAG215 (Phân khúc 504 Bytes khả dụng)...");
+                        await new Promise(r => setTimeout(r, 600));
+                        addLog(`✍️ [NFC] Đang ghi bản ghi NDEF chứa ID: ${simCardId}`);
+                        await new Promise(r => setTimeout(r, 700));
+                        addLog(`🔐 [NFC] Kích hoạt khóa mật khẩu tĩnh (Static Write Protection)...`);
+                        await new Promise(r => setTimeout(r, 500));
+                        addLog(`🌐 [CRM] Đang gửi lệnh liên kết thẻ đến máy chủ Mellodi Cloud...`);
+                        await new Promise(r => setTimeout(r, 800));
+                        
+                        try {
+                          const response = await fetch(`${API_BASE_URL}/users/nfc/link`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              userId: currentUser.id,
+                              cardId: simCardId
+                            })
+                          });
+                          const data = await response.json();
+                          if (data.success) {
+                            addLog(`🎉 [Success] Thiết lập thẻ NFC thành công! Thẻ đã kích hoạt.`);
+                            setNfcSimState('success');
+                            setNfcSimMessage(`Đã kích hoạt và liên kết thẻ NFC thành công! Mã UID: ${simCardId}`);
+                            setCurrentUser(data.user);
+                          } else {
+                            addLog(`❌ [Error] Lỗi từ máy chủ: ${data.error}`);
+                            setNfcSimState('error');
+                            setNfcSimMessage(data.error);
+                          }
+                        } catch (err) {
+                          addLog(`❌ [Error] Không thể kết nối với máy chủ.`);
+                          setNfcSimState('error');
+                          setNfcSimMessage("Lỗi kết nối máy chủ!");
+                        }
+                      }}
+                      className="w-full py-2.5 bg-[#2D5A47] hover:bg-[#1E3F31] disabled:bg-stone-200 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+                    >
+                      <span>{nfcSimState === 'linking' ? 'Đang thiết lập thẻ...' : 'Kích hoạt & Ghi thẻ NTAG215'}</span>
+                    </button>
+                  </div>
+                ) : (
+                  // Tap Simulator
+                  <div className="space-y-4 pt-2">
+                    {/* Visual Card Reader Mock */}
+                    <div className="bg-stone-900 text-white p-4 rounded-2xl border border-stone-800 text-center relative overflow-hidden">
+                      <div className="absolute inset-0 bg-radial-gradient from-emerald-500/10 to-transparent pointer-events-none"></div>
+                      <Wifi className="w-10 h-10 mx-auto text-emerald-400 animate-pulse rotate-90" />
+                      <p className="text-[10px] font-mono text-emerald-400 mt-2 uppercase tracking-widest">Mellodi POS NFC Reader</p>
+                      <p className="text-[9px] text-stone-400 mt-1">Hỗ trợ NTAG213 / NTAG215 / DESFire</p>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={nfcSimState === 'tapping'}
+                      onClick={async () => {
+                        if (!currentUser?.nfcCard) return;
+                        setNfcSimState('tapping');
+                        setHandshakeLogs([]);
+                        const addLog = (msg: string) => setHandshakeLogs(prev => [...prev, msg]);
+                        
+                        addLog("📡 [NFC] Đang quét trường vô tuyến 13.56 MHz...");
+                        await new Promise(r => setTimeout(r, 500));
+                        addLog(`📖 [NFC] Đọc thành công thẻ NTAG215 (UID: ${currentUser.nfcCard.cardId})`);
+                        await new Promise(r => setTimeout(r, 600));
+                        
+                        const timestamp = Date.now();
+                        addLog(`⏱️ [App] Khởi tạo dấu thời gian ngẫu nhiên: ${timestamp}`);
+                        await new Promise(r => setTimeout(r, 500));
+                        
+                        addLog(`🔐 [App] Thực hiện mã hóa một chiều HMAC-SHA256...`);
+                        const signature = await generateHmacSignature(currentUser.nfcCard.secretKey, timestamp.toString());
+                        addLog(`🔑 [App] Tạo mã xác thực động thành công: ${signature.substring(0, 16)}...`);
+                        await new Promise(r => setTimeout(r, 600));
+                        
+                        addLog(`🌐 [POS] Đang gửi yêu cầu xác thực bảo mật lên Server...`);
+                        await new Promise(r => setTimeout(r, 700));
+                        
+                        try {
+                          const response = await fetch(`${API_BASE_URL}/users/nfc/verify`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                              cardId: currentUser.nfcCard.cardId,
+                              timestamp,
+                              signature
+                            })
+                          });
+                          const data = await response.json();
+                          if (data.success) {
+                            addLog(`✅ [Server] Trạng thái 200 OK. Chữ ký hợp lệ!`);
+                            addLog(`🎉 [Success] Xác thực danh tính thành công. Chào mừng ${currentUser.name}!`);
+                            setNfcSimState('success');
+                            setNfcSimMessage(`Xác thực thẻ NFC thành công! Trạng thái thẻ: Hoạt động. Tên: ${currentUser.name}.`);
+                          } else {
+                            addLog(`❌ [Server] Phản hồi lỗi: ${data.error}`);
+                            setNfcSimState('error');
+                            setNfcSimMessage(data.error);
+                          }
+                        } catch (err) {
+                          addLog(`❌ [Server] Lỗi kết nối mạng.`);
+                          setNfcSimState('error');
+                          setNfcSimMessage("Lỗi kết nối máy chủ!");
+                        }
+                      }}
+                      className="w-full py-2.5 bg-[#2D5A47] hover:bg-[#1E3F31] disabled:bg-stone-200 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+                    >
+                      <span>{nfcSimState === 'tapping' ? 'Đang xác thực bảo mật...' : 'Chạm thẻ vào đầu đọc'}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Live Handshake Logs */}
+                {handshakeLogs.length > 0 && (
+                  <div className="bg-stone-950 text-stone-300 p-3.5 rounded-xl border border-stone-850 font-mono text-[9px] space-y-1.5 max-h-[160px] overflow-y-auto">
+                    <div className="text-stone-500 border-b border-stone-850 pb-1 flex justify-between items-center">
+                      <span>SECURE HANDSHAKE LOGS</span>
+                      <span className="animate-ping w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+                    </div>
+                    {handshakeLogs.map((log, index) => (
+                      <div key={index} className={log.startsWith('✅') || log.includes('[Success]') ? 'text-emerald-400 font-bold' : log.startsWith('❌') ? 'text-rose-400 font-bold' : ''}>
+                        {log}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {nfcSimState === 'success' && (
+                  <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800 text-[11px] font-semibold text-center">
+                    {nfcSimMessage}
+                  </div>
+                )}
+
+                {nfcSimState === 'error' && (
+                  <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-800 text-[11px] font-semibold text-center">
+                    {nfcSimMessage}
+                  </div>
+                )}
               </div>
             </motion.div>
           </div>

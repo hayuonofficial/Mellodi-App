@@ -58,6 +58,12 @@ export interface UserState {
   tier: 'Mellodi Basic' | 'Mellodi Gold' | 'Mellodi Premium';
   savedStores: string[];
   currentStoreId: string | null;
+  nfcCard?: {
+    cardId: string;
+    status: 'active' | 'suspended';
+    linkedAt: string;
+    secretKey: string;
+  };
 }
 
 export interface Order {

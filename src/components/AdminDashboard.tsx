@@ -4,7 +4,7 @@ import {
   Users, TrendingUp, ShoppingBag, Award, Search, Filter, 
   ChevronRight, ArrowLeft, RefreshCw, BarChart2, Download, 
   DollarSign, Calendar, Star, Coffee, Sparkles, AlertCircle, CheckCircle,
-  GraduationCap
+  GraduationCap, CreditCard, Plus, Wifi, Smartphone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -20,6 +20,12 @@ interface CustomerSummary {
   totalOrders: number;
   totalSpent: number;
   favoriteDrink: string;
+  nfcCard?: {
+    cardId: string;
+    status: 'active' | 'suspended';
+    linkedAt: string;
+    secretKey: string;
+  };
 }
 
 interface AnalyticsData {
@@ -69,11 +75,50 @@ interface CustomerDetail {
   transactions: any[];
 }
 
+// Helper to generate HMAC signature using browser Web Crypto API
+async function generateHmacSignature(secretKey: string, message: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secretKey);
+  const messageData = encoder.encode(message);
+  const cryptoKey = await window.crypto.subtle.importKey(
+    "raw",
+    keyData,
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const signatureBuffer = await window.crypto.subtle.sign(
+    "HMAC",
+    cryptoKey,
+    messageData
+  );
+  return Array.from(new Uint8Array(signatureBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 export const AdminDashboard: React.FC = () => {
   const { language, formatPrice } = useApp();
-  const [activeSubTab, setActiveSubTab] = useState<'analytics' | 'directory' | 'education'>('analytics');
+  const [activeSubTab, setActiveSubTab] = useState<'analytics' | 'directory' | 'education' | 'nfc'>('analytics');
   const [consultations, setConsultations] = useState<any[]>([]);
   
+  // NFC Station States
+  const [nfcSelectedCustomerId, setNfcSelectedCustomerId] = useState<string>('');
+  const [nfcWriteCardId, setNfcWriteCardId] = useState<string>('');
+  const [nfcWriteState, setNfcWriteState] = useState<'idle' | 'writing' | 'success' | 'error'>('idle');
+  const [nfcWriteMsg, setNfcWriteMsg] = useState<string>('');
+  const [nfcWriteLogs, setNfcWriteLogs] = useState<string[]>([]);
+
+  const [posScanCardId, setPosScanCardId] = useState<string>('');
+  const [posScanState, setPosScanState] = useState<'idle' | 'reading' | 'success' | 'error'>('idle');
+  const [posScanMsg, setPosScanMsg] = useState<string>('');
+  const [posScanLogs, setPosScanLogs] = useState<string[]>([]);
+  const [posScannedUser, setPosScannedUser] = useState<any | null>(null);
+  const [posActionType, setPosActionType] = useState<'points' | 'pay' | 'topup'>('points');
+  const [posActionAmount, setPosActionAmount] = useState<number>(100000);
+  const [posActionState, setPosActionState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [posActionMsg, setPosActionMsg] = useState<string>('');
+
   // Data states
   const [customers, setCustomers] = useState<CustomerSummary[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
@@ -238,6 +283,15 @@ export const AdminDashboard: React.FC = () => {
           >
             <GraduationCap className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-amber-700" />
             {language === 'vi' ? 'Đăng Ký Du Học' : 'Study Abroad'}
+          </button>
+          <button
+            onClick={() => { setActiveSubTab('nfc'); setSelectedCustomerId(null); }}
+            className={`flex-1 sm:flex-none px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
+              activeSubTab === 'nfc' ? 'bg-white text-coffee-950 shadow-xs' : 'text-stone-500 hover:text-stone-900'
+            }`}
+          >
+            <CreditCard className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-blue-600" />
+            {language === 'vi' ? 'Trạm Thẻ NFC' : 'NFC Station'}
           </button>
         </div>
       </div>
@@ -601,6 +655,367 @@ export const AdminDashboard: React.FC = () => {
               </div>
             )}
 
+            {/* TAB 4: NFC CARD STATION */}
+            {activeSubTab === 'nfc' && (
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  
+                  {/* Column 1: Issue/Link Card */}
+                  <div className="bg-white rounded-3xl border border-coffee-100 shadow-xs p-6 space-y-4 text-left">
+                    <h3 className="font-serif text-sm font-bold text-coffee-950 flex items-center space-x-2">
+                      <Plus className="w-4.5 h-4.5 text-[#2D5A47]" />
+                      <span>Phát hành & Ghi thẻ thành viên NFC</span>
+                    </h3>
+                    <p className="text-[11px] text-stone-500 leading-relaxed">
+                      Thiết lập bản ghi NDEF cho chip **NTAG215** và liên kết với tài khoản khách hàng trong cơ sở dữ liệu.
+                    </p>
+
+                    <div className="space-y-4 pt-2">
+                      {/* Customer Selector */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Chọn khách hàng nhận thẻ</label>
+                        <select
+                          value={nfcSelectedCustomerId}
+                          onChange={(e) => {
+                            setNfcSelectedCustomerId(e.target.value);
+                            if (!nfcWriteCardId) {
+                              const randomUid = '04:' + Array.from({length: 6}, () => Math.floor(Math.random()*256).toString(16).padStart(2, '0').toUpperCase()).join(':');
+                              setNfcWriteCardId(randomUid);
+                            }
+                          }}
+                          className="w-full px-3 py-2 bg-stone-55 border border-coffee-200 rounded-xl text-xs font-semibold focus:outline-hidden text-stone-900"
+                        >
+                          <option value="">-- Chọn khách hàng --</option>
+                          {customers.map(c => (
+                            <option key={c.id} value={c.id}>
+                              {c.name} ({c.phone}) - {c.nfcCard ? `Đã có thẻ ${c.nfcCard.cardId}` : 'Chưa có thẻ'}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Card ID Input */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Mã UID Thẻ (7-Byte NTAG215)</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={nfcWriteCardId}
+                            onChange={(e) => setNfcWriteCardId(e.target.value)}
+                            placeholder="04:XX:XX:XX:XX:XX:XX"
+                            className="flex-1 px-3 py-2 bg-stone-55 border border-coffee-200 rounded-xl text-xs font-mono font-bold text-stone-900"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const randomUid = '04:' + Array.from({length: 6}, () => Math.floor(Math.random()*256).toString(16).padStart(2, '0').toUpperCase()).join(':');
+                              setNfcWriteCardId(randomUid);
+                            }}
+                            className="px-3 py-2 bg-stone-100 hover:bg-stone-200 border border-stone-200 text-stone-700 text-[10px] font-bold rounded-xl transition-all cursor-pointer"
+                          >
+                            Tạo mã UID
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={!nfcSelectedCustomerId || !nfcWriteCardId || nfcWriteState === 'writing'}
+                        onClick={async () => {
+                          if (!nfcSelectedCustomerId || !nfcWriteCardId) return;
+                          setNfcWriteState('writing');
+                          setNfcWriteLogs([]);
+                          const addLog = (msg: string) => setNfcWriteLogs(prev => [...prev, msg]);
+
+                          addLog("⚡ [Hardware] Kết nối đầu đọc NFC USB ACR122U...");
+                          await new Promise(r => setTimeout(r, 600));
+                          addLog("📡 [NFC] Phát hiện chip NTAG215 (HF 13.56 MHz)...");
+                          await new Promise(r => setTimeout(r, 600));
+                          addLog(`✍️ [NFC] Tiến hành ghi chuỗi NDEF: https://mellodi.vn/card/${nfcWriteCardId}`);
+                          await new Promise(r => setTimeout(r, 750));
+                          addLog("🔐 [NFC] Ghi khóa mật khẩu bảo mật ghi (Static Protection)...");
+                          await new Promise(r => setTimeout(r, 550));
+                          addLog("🌐 [Database] Đồng bộ hóa thông tin thẻ lên máy chủ Mellodi CRM...");
+                          await new Promise(r => setTimeout(r, 800));
+
+                          try {
+                            const response = await fetch(`${API_BASE_URL}/api/users/nfc/link`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                userId: nfcSelectedCustomerId,
+                                cardId: nfcWriteCardId
+                              })
+                            });
+                            const data = await response.json();
+                            if (response.ok) {
+                              addLog("✅ [CRM] Liên kết thẻ thành viên NFC thành công!");
+                              setNfcWriteState('success');
+                              setNfcWriteMsg(`Đã cấp thẻ NFC ${nfcWriteCardId} cho khách hàng thành công.`);
+                              fetchData(); // Reload customer list
+                            } else {
+                              addLog(`❌ [CRM] Thất bại: ${data.error}`);
+                              setNfcWriteState('error');
+                              setNfcWriteMsg(data.error);
+                            }
+                          } catch (err) {
+                            addLog("❌ [Network] Không thể kết nối với API.");
+                            setNfcWriteState('error');
+                            setNfcWriteMsg("Lỗi kết nối máy chủ!");
+                          }
+                        }}
+                        className="w-full py-2.5 bg-[#2D5A47] hover:bg-[#1E3F31] disabled:bg-stone-200 disabled:text-stone-400 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>{nfcWriteState === 'writing' ? 'Đang thực hiện ghi thẻ...' : 'Ghi & Liên kết Thẻ NFC'}</span>
+                      </button>
+
+                      {/* Write Logs */}
+                      {nfcWriteLogs.length > 0 && (
+                        <div className="bg-stone-950 text-stone-300 p-3 rounded-xl border border-stone-850 font-mono text-[9px] space-y-1 max-h-[120px] overflow-y-auto">
+                          {nfcWriteLogs.map((log, idx) => (
+                            <div key={idx} className={log.startsWith('✅') ? 'text-emerald-400 font-bold' : log.startsWith('❌') ? 'text-rose-400 font-bold' : ''}>
+                              {log}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {nfcWriteState === 'success' && (
+                        <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-800 text-[11px] font-semibold text-center">
+                          {nfcWriteMsg}
+                        </div>
+                      )}
+
+                      {nfcWriteState === 'error' && (
+                        <div className="p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-800 text-[11px] font-semibold text-center">
+                          {nfcWriteMsg}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Column 2: POS Terminal Simulator */}
+                  <div className="bg-white rounded-3xl border border-coffee-100 shadow-xs p-6 space-y-4 text-left">
+                    <h3 className="font-serif text-sm font-bold text-coffee-950 flex items-center space-x-2">
+                      <Smartphone className="w-4.5 h-4.5 text-[#A37B45]" />
+                      <span>Đầu đọc thẻ NFC tại Quầy (POS Terminal)</span>
+                    </h3>
+                    <p className="text-[11px] text-stone-500 leading-relaxed">
+                      Chạm thẻ thành viên vật lý của khách hàng để nhận diện, thanh toán bằng ví, nạp tiền hoặc tích điểm.
+                    </p>
+
+                    <div className="space-y-4 pt-2">
+                      {/* Select card in system */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Chọn thẻ NFC khách hàng đang chạm</label>
+                        <select
+                          value={posScanCardId}
+                          onChange={(e) => {
+                            setPosScanCardId(e.target.value);
+                            setPosScannedUser(null);
+                            setPosScanState('idle');
+                            setPosScanLogs([]);
+                          }}
+                          className="w-full px-3 py-2 bg-stone-55 border border-coffee-200 rounded-xl text-xs font-semibold focus:outline-hidden text-stone-900"
+                        >
+                          <option value="">-- Chọn thẻ NFC để chạm --</option>
+                          {customers.filter(c => c.nfcCard).map(c => (
+                            <option key={c.id} value={c.nfcCard!.cardId}>
+                              Thẻ của: {c.name} (UID: {c.nfcCard!.cardId}) - {c.nfcCard!.status === 'active' ? 'Active' : 'Locked'}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <button
+                        type="button"
+                        disabled={!posScanCardId || posScanState === 'reading'}
+                        onClick={async () => {
+                          if (!posScanCardId) return;
+                          setPosScanState('reading');
+                          setPosScanLogs([]);
+                          setPosScannedUser(null);
+                          const addLog = (msg: string) => setPosScanLogs(prev => [...prev, msg]);
+
+                          addLog("📡 [POS] Đầu đọc NFC đang phát trường sóng vô tuyến...");
+                          await new Promise(r => setTimeout(r, 500));
+                          
+                          const matchedCustomer = customers.find(c => c.nfcCard?.cardId === posScanCardId);
+                          if (!matchedCustomer || !matchedCustomer.nfcCard) {
+                            addLog("❌ [NFC] Không nhận diện được cấu trúc thẻ.");
+                            setPosScanState('error');
+                            setPosScanMsg("Thẻ không hợp lệ.");
+                            return;
+                          }
+
+                          addLog(`📖 [NFC] Đã đọc ID thẻ: ${posScanCardId}`);
+                          await new Promise(r => setTimeout(r, 500));
+
+                          const timestamp = Date.now();
+                          addLog(`⏱️ [NFC] Tạo dấu thời gian giao dịch: ${timestamp}`);
+                          await new Promise(r => setTimeout(r, 400));
+
+                          addLog("🔐 [NFC] Tính toán chữ ký động HMAC-SHA256...");
+                          const signature = await generateHmacSignature(matchedCustomer.nfcCard.secretKey, timestamp.toString());
+                          addLog(`🔑 [NFC] Chữ ký bảo mật: ${signature.substring(0, 16)}...`);
+                          await new Promise(r => setTimeout(r, 600));
+
+                          addLog("🌐 [POS] Gửi yêu cầu xác thực bảo mật lên Server...");
+                          await new Promise(r => setTimeout(r, 700));
+
+                          try {
+                            const response = await fetch(`${API_BASE_URL}/api/users/nfc/verify`, {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                cardId: posScanCardId,
+                                timestamp,
+                                signature
+                              })
+                            });
+                            const data = await response.json();
+                            if (response.ok) {
+                              addLog("✅ [Server] Xác thực thành công! Khớp chữ ký số.");
+                              setPosScanState('success');
+                              setPosScannedUser(data.user);
+                            } else {
+                              addLog(`❌ [Server] Bị từ chối: ${data.error}`);
+                              setPosScanState('error');
+                              setPosScanMsg(data.error);
+                            }
+                          } catch (err) {
+                            addLog("❌ [Network] Lỗi kết nối mạng.");
+                            setPosScanState('error');
+                            setPosScanMsg("Lỗi kết nối máy chủ!");
+                          }
+                        }}
+                        className="w-full py-2.5 bg-coffee-850 hover:bg-coffee-900 disabled:bg-stone-200 disabled:text-stone-400 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+                      >
+                        <Wifi className="w-4 h-4 rotate-90" />
+                        <span>{posScanState === 'reading' ? 'Đang đọc thẻ...' : 'Chạm thẻ (Simulate Tap)'}</span>
+                      </button>
+
+                      {/* Scan Logs */}
+                      {posScanLogs.length > 0 && (
+                        <div className="bg-stone-950 text-stone-300 p-3 rounded-xl border border-stone-850 font-mono text-[9px] space-y-1 max-h-[120px] overflow-y-auto">
+                          {posScanLogs.map((log, idx) => (
+                            <div key={idx} className={log.startsWith('✅') ? 'text-emerald-400 font-bold' : log.startsWith('❌') ? 'text-rose-400 font-bold' : ''}>
+                              {log}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Display Scanned User Profile & Quick Actions */}
+                      {posScanState === 'success' && posScannedUser && (
+                        <div className="border border-emerald-150 bg-emerald-50/10 rounded-2xl p-4 space-y-4">
+                          <div className="flex justify-between items-center border-b border-stone-100 pb-2">
+                            <div>
+                              <h4 className="text-xs font-bold text-coffee-950">{posScannedUser.name}</h4>
+                              <p className="text-[9px] text-stone-550 font-mono">Hạng: {posScannedUser.tier}</p>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] font-bold text-coffee-950 font-mono block">{formatPrice(posScannedUser.walletBalance)}</span>
+                              <span className="text-[8px] text-stone-450 font-mono block">{posScannedUser.lenPoints.toLocaleString()} LEN</span>
+                            </div>
+                          </div>
+
+                          {/* Quick POS Transaction Form */}
+                          <div className="space-y-3">
+                            <div className="flex gap-2">
+                              {/* Action Type */}
+                              <div className="flex-1">
+                                <label className="text-[8px] font-bold text-stone-450 uppercase tracking-wider block mb-1">Loại giao dịch</label>
+                                <select
+                                  value={posActionType}
+                                  onChange={(e: any) => {
+                                    setPosActionType(e.target.value);
+                                    setPosActionState('idle');
+                                    setPosActionMsg('');
+                                  }}
+                                  className="w-full px-2 py-1.5 bg-white border border-stone-200 rounded-lg text-[11px] font-bold text-stone-800"
+                                >
+                                  <option value="pay">Thanh toán trừ ví (NFC Pay)</option>
+                                  <option value="topup">Nạp tiền mặt tại quầy (Topup)</option>
+                                </select>
+                              </div>
+
+                              {/* Amount */}
+                              <div className="w-28">
+                                <label className="text-[8px] font-bold text-stone-450 uppercase tracking-wider block mb-1">Số tiền (VND)</label>
+                                <input
+                                  type="number"
+                                  value={posActionAmount}
+                                  onChange={(e) => setPosActionAmount(Number(e.target.value))}
+                                  className="w-full px-2 py-1.5 bg-white border border-stone-200 rounded-lg text-[11px] font-mono font-bold text-stone-800"
+                                />
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              disabled={posActionState === 'loading' || posActionAmount <= 0}
+                              onClick={async () => {
+                                setPosActionState('loading');
+                                setPosActionMsg('');
+                                
+                                const timestamp = Date.now();
+                                const amount = posActionAmount;
+                                const endpoint = posActionType === 'pay' ? '/api/users/nfc/pay' : '/api/users/nfc/topup';
+                                const messageToSign = `${timestamp}-${amount}`;
+                                
+                                try {
+                                  const signature = await generateHmacSignature(posScannedUser.nfcCard.secretKey, messageToSign);
+                                  
+                                  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                      cardId: posScanCardId,
+                                      amountVND: amount,
+                                      timestamp,
+                                      signature
+                                    })
+                                  });
+                                  const data = await response.json();
+                                  if (response.ok) {
+                                    setPosActionState('success');
+                                    setPosActionMsg(posActionType === 'pay' 
+                                      ? `Thanh toán thành công! Trừ -${amount.toLocaleString()}đ (Đã cộng 10% LEN)` 
+                                      : `Nạp tiền thành công! Cộng +${amount.toLocaleString()}đ (Đã cộng 10% LEN)`);
+                                    setPosScannedUser(data.user);
+                                    fetchData(); // Refresh list
+                                  } else {
+                                    setPosActionState('error');
+                                    setPosActionMsg(data.error);
+                                  }
+                                } catch (err) {
+                                  setPosActionState('error');
+                                  setPosActionMsg('Lỗi kết nối máy chủ!');
+                                }
+                              }}
+                              className="w-full py-2 bg-[#2D5A47] hover:bg-[#1E3F31] disabled:bg-stone-200 text-white text-xs font-bold rounded-lg transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                            >
+                              <span>{posActionState === 'loading' ? 'Đang thực hiện...' : 'Xác nhận giao dịch'}</span>
+                            </button>
+
+                            {posActionMsg && (
+                              <div className={`p-2 rounded-lg text-[10px] font-semibold text-center ${
+                                posActionState === 'success' ? 'bg-emerald-50 text-emerald-800' : 'bg-rose-50 text-rose-800'
+                              }`}>
+                                {posActionMsg}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT SIDE: CUSTOMER 360° PROFILE */}
