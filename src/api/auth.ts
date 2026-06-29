@@ -72,6 +72,7 @@ router.post("/register", async (req, res) => {
       walletBalance: 0,
       lenPoints: 0,
       tier: "Mellodi Basic",
+      role: "customer",
       createdAt: new Date().toISOString(),
     };
 
@@ -139,6 +140,7 @@ router.post("/login", async (req, res) => {
           walletBalance: 1000000,
           lenPoints: 300000,
           tier: "Mellodi Premium",
+          role: "admin",
           createdAt: new Date().toISOString()
         };
         await createUser(newAdmin);

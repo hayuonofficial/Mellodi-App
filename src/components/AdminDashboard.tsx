@@ -98,7 +98,7 @@ async function generateHmacSignature(secretKey: string, message: string): Promis
 }
 
 export const AdminDashboard: React.FC = () => {
-  const { language, formatPrice } = useApp();
+  const { language, formatPrice, currentUser } = useApp();
   const [activeSubTab, setActiveSubTab] = useState<'analytics' | 'directory' | 'education' | 'nfc'>('analytics');
   const [consultations, setConsultations] = useState<any[]>([]);
   
@@ -1103,6 +1103,60 @@ export const AdminDashboard: React.FC = () => {
                           <span className="text-xs font-black font-mono text-coffee-950 block mt-1">{formatPrice(customerDetail.stats.averageOrderValue)}</span>
                         </div>
                       </div>
+
+                      {/* Role Management (Only Admin can change roles) */}
+                      {currentUser?.role === 'admin' && (
+                        <div className="pt-4 border-t border-stone-100 space-y-2">
+                          <label className="text-[10px] font-bold text-[#4E342E] uppercase tracking-wider block">Phân Quyền Vai Trò Thành Viên</label>
+                          <div className="flex gap-2">
+                            <select
+                              value={customerDetail.user.role || 'customer'}
+                              onChange={async (e) => {
+                                const newRole = e.target.value;
+                                try {
+                                  const res = await fetch(`${API_BASE_URL}/api/admin/change-role`, {
+                                    method: 'POST',
+                                    headers: { 
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+                                    },
+                                    body: JSON.stringify({
+                                      userId: customerDetail.user.id,
+                                      newRole
+                                    })
+                                  });
+                                  const data = await res.json();
+                                  if (res.ok) {
+                                    alert(`Đã cập nhật vai trò của ${customerDetail.user.name} thành: ${newRole === 'admin' ? 'Admin' : newRole === 'manager' ? 'Quản trị viên' : 'Thành viên'}`);
+                                    // Refresh details
+                                    const detailRes = await fetch(`${API_BASE_URL}/api/admin/customers/${customerDetail.user.id}`, {
+                                      headers: { 'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}` }
+                                    });
+                                    if (detailRes.ok) {
+                                      const detailData = await detailRes.json();
+                                      setCustomerDetail(detailData);
+                                    }
+                                    fetchData(); // Refresh list
+                                  } else {
+                                    alert(data.error);
+                                  }
+                                } catch (err) {
+                                  alert('Lỗi kết nối máy chủ!');
+                                }
+                              }}
+                              disabled={customerDetail.user.id === 'u-admin'}
+                              className="flex-1 px-3 py-2 bg-stone-55 border border-coffee-200 rounded-xl text-xs font-semibold focus:outline-hidden text-stone-900 cursor-pointer"
+                            >
+                              <option value="customer">Thành viên (Customer)</option>
+                              <option value="manager">Quản trị viên (Manager)</option>
+                              <option value="admin">Admin tối cao (Admin)</option>
+                            </select>
+                            {customerDetail.user.id === 'u-admin' && (
+                              <span className="text-[10px] text-rose-500 font-bold flex items-center">Tài khoản Admin gốc</span>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Drink Preferences */}

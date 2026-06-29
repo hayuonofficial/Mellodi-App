@@ -7,6 +7,8 @@ import {
   createOrder,
   createTransaction,
   getAllEducationConsultationsGlobal,
+  getUser,
+  updateUser,
   UserRecord,
   OrderRecord,
   TransactionRecord
@@ -366,6 +368,36 @@ router.get("/education-consultations", async (req, res) => {
   } catch (error) {
     console.error("Get education consultations error:", error);
     res.status(500).json({ error: "Lỗi hệ thống lấy danh sách đăng ký." });
+  }
+});
+
+// API: Admin - Change User Role (Only Admin can do this)
+router.post("/change-role", async (req, res) => {
+  const { userId, newRole } = req.body;
+
+  if (!userId || !newRole) {
+    return res.status(400).json({ error: "Thiếu thông tin người dùng hoặc vai trò mới!" });
+  }
+
+  if (!["admin", "manager", "customer"].includes(newRole)) {
+    return res.status(400).json({ error: "Vai trò mới không hợp lệ!" });
+  }
+
+  try {
+    const user = await getUser(userId);
+    if (!user) {
+      return res.status(404).json({ error: "Không tìm thấy thông tin khách hàng!" });
+    }
+
+    if (userId === "u-admin") {
+      return res.status(403).json({ error: "Không thể thay đổi vai trò của tài khoản Admin tối cao!" });
+    }
+
+    const updatedUser = await updateUser(userId, { role: newRole });
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error("Change role error:", error);
+    res.status(500).json({ error: "Lỗi hệ thống thay đổi vai trò." });
   }
 });
 

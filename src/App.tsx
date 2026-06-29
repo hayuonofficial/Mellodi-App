@@ -342,6 +342,13 @@ function AppContent() {
           </motion.div>
         );
       case 'admin':
+        if (!currentUser || (currentUser.role !== 'admin' && currentUser.role !== 'manager')) {
+          return (
+            <div className="p-8 text-center text-stone-500 font-bold font-serif">
+              Bạn không có quyền truy cập vào mục quản trị!
+            </div>
+          );
+        }
         return (
           <motion.div
             key="admin"

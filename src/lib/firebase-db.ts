@@ -90,6 +90,7 @@ export interface UserRecord {
   lenPoints: number;
   tier: "Mellodi Basic" | "Mellodi Gold" | "Mellodi Premium";
   createdAt: string;
+  role?: "admin" | "manager" | "customer";
   biometricEnabled?: boolean;
   biometricToken?: string;
   nfcCard?: {
@@ -181,6 +182,7 @@ const DEFAULT_LOCAL_DB: DatabaseSchema = {
       walletBalance: 1000000,
       lenPoints: 300000,
       tier: "Mellodi Premium",
+      role: "admin",
       createdAt: new Date().toISOString()
     }
   ],

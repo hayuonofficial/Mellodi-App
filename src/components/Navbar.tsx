@@ -39,7 +39,7 @@ export const Navbar: React.FC<NavbarProps> = ({ activeTab, setActiveTab }) => {
     { id: 'vouchers', label: translations[language]['nav.vouchers'], icon: Tag },
     { id: 'rewards', label: translations[language]['nav.rewards'] || (language === 'vi' ? 'Đổi Quà' : language === 'ko' ? '선물 교환' : 'Redeem Gifts'), icon: GiftIcon },
     { id: 'history', label: translations[language]['nav.history'], icon: History },
-    ...(currentUser ? [{ id: 'admin', label: language === 'vi' ? 'Quản trị CRM' : language === 'ko' ? 'CRM 관리' : 'CRM Admin', icon: ShieldCheck }] : [])
+    ...(currentUser && (currentUser.role === 'admin' || currentUser.role === 'manager') ? [{ id: 'admin', label: language === 'vi' ? 'Quản trị CRM' : language === 'ko' ? 'CRM Quản lý' : 'CRM Admin', icon: ShieldCheck }] : [])
   ];
 
   return (

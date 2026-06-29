@@ -12,6 +12,7 @@ export interface AppUser {
   lenPoints: number;
   tier: 'Mellodi Basic' | 'Mellodi Gold' | 'Mellodi Premium';
   createdAt: string;
+  role?: 'admin' | 'manager' | 'customer';
   biometricEnabled?: boolean;
   biometricToken?: string;
   nfcCard?: {
