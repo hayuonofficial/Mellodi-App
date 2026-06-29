@@ -40,7 +40,7 @@ function getFavoriteDrink(orders: OrderRecord[]) {
 router.get("/customers", async (req, res) => {
   try {
     const search = (req.query.search as string || "").trim().toLowerCase();
-    const tierFilter = req.query.tier as string || "all"; // 'all', 'Welcome', 'Green', 'Gold'
+    const tierFilter = req.query.tier as string || "all"; // 'all', 'Mellodi Basic', 'Mellodi Gold', 'Mellodi Premium'
     const spendFilter = req.query.spend as string || "all"; // 'all', 'under100', '100to500', 'over500'
 
     const allUsers = await getAllUsers();
@@ -173,7 +173,7 @@ router.get("/analytics", async (req, res) => {
     const totalPointsIssued = allUsers.reduce((sum, u) => sum + u.lenPoints, 0);
 
     // Tier distribution
-    const tiers = { Welcome: 0, Green: 0, Gold: 0 };
+    const tiers = { "Mellodi Basic": 0, "Mellodi Gold": 0, "Mellodi Premium": 0 };
     allUsers.forEach(u => {
       if (u.tier in tiers) {
         tiers[u.tier as keyof typeof tiers]++;
@@ -241,19 +241,19 @@ router.post("/seed-data", async (req, res) => {
       const userId = `u-seed-${1000 + i}`;
 
       // Distribute Tiers and balances realistically
-      let tier: "Welcome" | "Green" | "Gold" = "Welcome";
-      let lenPoints = randomRange(0, 15000);
+      let tier: "Mellodi Basic" | "Mellodi Gold" | "Mellodi Premium" = "Mellodi Basic";
+      let lenPoints = randomRange(0, 50000);
       let walletBalance = randomRange(0, 150000);
 
       const tierRoll = Math.random();
       if (tierRoll > 0.88) {
-        tier = "Gold";
-        lenPoints = randomRange(50000, 180000);
+        tier = "Mellodi Premium";
+        lenPoints = randomRange(300000, 800000);
         walletBalance = randomRange(100000, 850000);
       } else if (tierRoll > 0.6) {
-        tier = "Green";
-        lenPoints = randomRange(20000, 48000);
-        walletBalance = randomRange(30000, 450000);
+        tier = "Mellodi Gold";
+        lenPoints = randomRange(100000, 290000);
+        walletBalance = randomRange(50000, 450000);
       }
 
       const joinDaysAgo = randomRange(1, 45);

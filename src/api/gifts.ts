@@ -169,9 +169,9 @@ router.post("/redeem", authenticateToken, async (req: AuthenticatedRequest, res)
     // Deduct points and recalculate tier
     const remainingPoints = user.lenPoints - gift.costPoints;
     let newTier = user.tier;
-    if (remainingPoints >= 50000) newTier = "Gold";
-    else if (remainingPoints >= 20000) newTier = "Green";
-    else newTier = "Welcome";
+    if (remainingPoints >= 300000) newTier = "Mellodi Premium";
+    else if (remainingPoints >= 100000) newTier = "Mellodi Gold";
+    else newTier = "Mellodi Basic";
 
     await updateUser(userId, {
       lenPoints: remainingPoints,

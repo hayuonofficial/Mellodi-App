@@ -46,8 +46,9 @@ export async function processPayment(description: string, amount: number): Promi
 
     // Recalculate tier
     let newTier = user.tier;
-    if (newPoints >= 50000) newTier = "Gold";
-    else if (newPoints >= 20000) newTier = "Green";
+    if (newPoints >= 300000) newTier = "Mellodi Premium";
+    else if (newPoints >= 100000) newTier = "Mellodi Gold";
+    else newTier = "Mellodi Basic";
 
     await updateUser(user.id, {
       walletBalance: newBalance,

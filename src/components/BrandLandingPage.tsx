@@ -804,9 +804,9 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
               <div className="flex items-center space-x-3 bg-stone-50 border border-coffee-100 px-4 py-2.5 rounded-2xl shadow-2xs self-start md:self-auto">
                 <span className="text-xs font-bold text-stone-550">Hạng thành viên:</span>
                 <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider ${
-                  currentUser.tier === 'Gold' 
+                  currentUser.tier === 'Mellodi Premium' 
                     ? 'bg-amber-100 text-amber-800 border border-amber-200' 
-                    : currentUser.tier === 'Green'
+                    : currentUser.tier === 'Mellodi Gold'
                     ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                     : 'bg-stone-200 text-stone-700'
                 }`}>
@@ -833,7 +833,7 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                       <span className="text-[8px] text-amber-300 block font-bold uppercase tracking-widest mt-0.5">Loyalty Member</span>
                     </div>
                     <Award className={`w-7 h-7 ${
-                      currentUser.tier === 'Gold' ? 'text-amber-300' : currentUser.tier === 'Green' ? 'text-emerald-300' : 'text-stone-300'
+                      currentUser.tier === 'Mellodi Premium' ? 'text-amber-300' : currentUser.tier === 'Mellodi Gold' ? 'text-emerald-300' : 'text-stone-300'
                     }`} />
                   </div>
 

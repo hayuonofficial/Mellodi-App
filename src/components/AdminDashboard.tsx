@@ -15,7 +15,7 @@ interface CustomerSummary {
   phone: string;
   walletBalance: number;
   lenPoints: number;
-  tier: 'Welcome' | 'Green' | 'Gold';
+  tier: 'Mellodi Basic' | 'Mellodi Gold' | 'Mellodi Premium';
   createdAt: string;
   totalOrders: number;
   totalSpent: number;
@@ -31,9 +31,9 @@ interface AnalyticsData {
     averageOrderValue: number;
   };
   tierDistribution: {
-    Welcome: number;
-    Green: number;
-    Gold: number;
+    'Mellodi Basic': number;
+    'Mellodi Gold': number;
+    'Mellodi Premium': number;
   };
   topProducts: Array<{
     name: string;
@@ -51,7 +51,7 @@ interface CustomerDetail {
     phone: string;
     walletBalance: number;
     lenPoints: number;
-    tier: 'Welcome' | 'Green' | 'Gold';
+    tier: 'Mellodi Basic' | 'Mellodi Gold' | 'Mellodi Premium';
     createdAt: string;
   };
   stats: {
@@ -365,36 +365,36 @@ export const AdminDashboard: React.FC = () => {
                     </h3>
                     
                     <div className="space-y-3 pt-2">
-                      {/* Gold */}
+                      {/* Mellodi Premium */}
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs font-semibold text-stone-700">
-                          <span className="flex items-center space-x-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span><span>Hạng Gold (Vàng)</span></span>
-                          <span className="font-mono">{analytics.tierDistribution.Gold} ({Math.round((analytics.tierDistribution.Gold / analytics.summary.totalCustomers) * 100) || 0}%)</span>
+                          <span className="flex items-center space-x-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span><span>Hạng Mellodi Premium</span></span>
+                          <span className="font-mono">{analytics.tierDistribution['Mellodi Premium']} ({Math.round((analytics.tierDistribution['Mellodi Premium'] / analytics.summary.totalCustomers) * 100) || 0}%)</span>
                         </div>
                         <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-amber-400" style={{ width: `${(analytics.tierDistribution.Gold / analytics.summary.totalCustomers) * 100}%` }}></div>
+                          <div className="h-full bg-amber-400" style={{ width: `${(analytics.tierDistribution['Mellodi Premium'] / analytics.summary.totalCustomers) * 100}%` }}></div>
                         </div>
                       </div>
 
-                      {/* Green */}
+                      {/* Mellodi Gold */}
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs font-semibold text-stone-700">
-                          <span className="flex items-center space-x-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span><span>Hạng Green (Ngọc bích)</span></span>
-                          <span className="font-mono">{analytics.tierDistribution.Green} ({Math.round((analytics.tierDistribution.Green / analytics.summary.totalCustomers) * 100) || 0}%)</span>
+                          <span className="flex items-center space-x-1"><span className="w-2.5 h-2.5 rounded-full bg-emerald-600"></span><span>Hạng Mellodi Gold</span></span>
+                          <span className="font-mono">{analytics.tierDistribution['Mellodi Gold']} ({Math.round((analytics.tierDistribution['Mellodi Gold'] / analytics.summary.totalCustomers) * 100) || 0}%)</span>
                         </div>
                         <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-emerald-600" style={{ width: `${(analytics.tierDistribution.Green / analytics.summary.totalCustomers) * 100}%` }}></div>
+                          <div className="h-full bg-emerald-600" style={{ width: `${(analytics.tierDistribution['Mellodi Gold'] / analytics.summary.totalCustomers) * 100}%` }}></div>
                         </div>
                       </div>
 
-                      {/* Welcome */}
+                      {/* Mellodi Basic */}
                       <div className="space-y-1">
                         <div className="flex justify-between text-xs font-semibold text-stone-700">
-                          <span className="flex items-center space-x-1"><span className="w-2.5 h-2.5 rounded-full bg-stone-500"></span><span>Hạng Welcome (Chào mừng)</span></span>
-                          <span className="font-mono">{analytics.tierDistribution.Welcome} ({Math.round((analytics.tierDistribution.Welcome / analytics.summary.totalCustomers) * 100) || 0}%)</span>
+                          <span className="flex items-center space-x-1"><span className="w-2.5 h-2.5 rounded-full bg-stone-500"></span><span>Hạng Mellodi Basic</span></span>
+                          <span className="font-mono">{analytics.tierDistribution['Mellodi Basic']} ({Math.round((analytics.tierDistribution['Mellodi Basic'] / analytics.summary.totalCustomers) * 100) || 0}%)</span>
                         </div>
                         <div className="w-full h-2.5 bg-stone-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-stone-500" style={{ width: `${(analytics.tierDistribution.Welcome / analytics.summary.totalCustomers) * 100}%` }}></div>
+                          <div className="h-full bg-stone-500" style={{ width: `${(analytics.tierDistribution['Mellodi Basic'] / analytics.summary.totalCustomers) * 100}%` }}></div>
                         </div>
                       </div>
                     </div>
@@ -456,10 +456,10 @@ export const AdminDashboard: React.FC = () => {
                         onChange={(e) => setTierFilter(e.target.value)}
                         className="pl-9 pr-8 py-2.5 bg-stone-50 border border-coffee-200 rounded-xl text-xs font-semibold text-coffee-850 focus:outline-hidden appearance-none cursor-pointer"
                       >
-                        <option value="all">Hạng thành viên (Tất cả)</option>
-                        <option value="Welcome">Hạng Welcome</option>
-                        <option value="Green">Hạng Green</option>
-                        <option value="Gold">Hạng Gold</option>
+                         <option value="all">Hạng thành viên (Tất cả)</option>
+                         <option value="Mellodi Basic">Hạng Mellodi Basic</option>
+                         <option value="Mellodi Gold">Hạng Mellodi Gold</option>
+                         <option value="Mellodi Premium">Hạng Mellodi Premium</option>
                       </select>
                     </div>
 

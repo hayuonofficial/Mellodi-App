@@ -88,7 +88,7 @@ export interface UserRecord {
   password?: string;
   walletBalance: number;
   lenPoints: number;
-  tier: "Welcome" | "Green" | "Gold";
+  tier: "Mellodi Basic" | "Mellodi Gold" | "Mellodi Premium";
   createdAt: string;
   biometricEnabled?: boolean;
   biometricToken?: string;
@@ -172,8 +172,8 @@ const DEFAULT_LOCAL_DB: DatabaseSchema = {
       phone: "0123456789",
       password: "$2b$10$CZ33M5295rSHKjGNPyrdnOxIOMIhMypsbzeek.E43tNtNCE9b8CTO", // Hashed "Abc@123"
       walletBalance: 1000000,
-      lenPoints: 50000,
-      tier: "Gold",
+      lenPoints: 300000,
+      tier: "Mellodi Premium",
       createdAt: new Date().toISOString()
     }
   ],

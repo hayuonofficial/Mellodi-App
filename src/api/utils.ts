@@ -42,14 +42,14 @@ export async function updateUserPointsAndTier(
     const newBalance = user.walletBalance + additionalWalletBalance;
 
     let newTier = user.tier;
-    if (newPoints >= 50000) newTier = "Gold";
-    else if (newPoints >= 20000) newTier = "Green";
-    else newTier = "Welcome";
+    if (newPoints >= 300000) newTier = "Mellodi Premium";
+    else if (newPoints >= 100000) newTier = "Mellodi Gold";
+    else newTier = "Mellodi Basic";
 
     // Determine if user has been upgraded
     const isTierUpgraded = newTier !== user.tier && (
-      (user.tier === "Welcome" && (newTier === "Green" || newTier === "Gold")) ||
-      (user.tier === "Green" && newTier === "Gold")
+      (user.tier === "Mellodi Basic" && (newTier === "Mellodi Gold" || newTier === "Mellodi Premium")) ||
+      (user.tier === "Mellodi Gold" && newTier === "Mellodi Premium")
     );
 
     const updatedUser = await updateUser(userId, {
@@ -66,11 +66,12 @@ export async function updateUserPointsAndTier(
 
     // 2. Handle tier upgrade rewards
     if (isTierUpgraded) {
-      const voucherCode = newTier === "Gold" ? "WELCOMEGOLD" : "WELCOMEGREEN";
-      const discountValue = newTier === "Gold" ? 50 : 30;
+      const voucherCode = newTier === "Mellodi Premium" ? "WELCOMEPREMIUM" : "WELCOMEGOLD";
+      const discountValue = newTier === "Mellodi Premium" ? 50 : 30;
+      const tierSafeName = newTier.replace(/\s+/g, '-').toLowerCase();
 
       const newVoucher = {
-        id: `vc-tier-${newTier.toLowerCase()}-${Date.now()}`,
+        id: `vc-tier-${tierSafeName}-${Date.now()}`,
         code: voucherCode,
         title: {
           vi: `Chào Mừng Hạng ${newTier} - Giảm ${discountValue}%`,

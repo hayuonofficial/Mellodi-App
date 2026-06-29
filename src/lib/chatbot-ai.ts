@@ -41,13 +41,13 @@ export const getBotResponse = (input: string, lang: 'vi' | 'en' | 'ko'): string 
       return 'You can contact Mellodi customer support via Hotline: 0375681791 or email us at contact@mellodi.vn. We are here to help!';
     }
     if (query.includes('point') || query.includes('len') || query.includes('tier') || query.includes('vip') || query.includes('membership')) {
-      return 'Mellodi loyalty program uses LEN points. You earn 10% of your bill back in LEN points for every order or wallet top-up on the app. Accumulate points to level up to Green or Gold VIP tier for exclusive vouchers and up to 30% discounts!';
+      return 'Mellodi loyalty program uses LEN points. You earn 10% of your bill back in LEN points for every order or wallet top-up on the app (e.g. 100,000đ spent = 10,000 points). Accumulate points to level up: Mellodi Basic (0 pts), Mellodi Gold (100,000 pts / 1,000,000đ spent), and Mellodi Premium (300,000 pts) for exclusive vouchers and up to 50% discounts!';
     }
     if (query.includes('menu') || query.includes('drink') || query.includes('coffee') || query.includes('signature') || query.includes('price')) {
       return 'Mellodi\'s Signature Menu features:\n1. Mellodi Salted Cream Coffee (55k VND) - Rich Robusta with savory salted cream.\n2. Imperial Peach Tea (60k VND) - Refreshing black tea with sweet peach slices.\n3. Misty Matcha Latte (65k VND) - Premium Shizuoka matcha. Check the Order tab in our App to view the full menu!';
     }
     if (query.includes('promo') || query.includes('voucher') || query.includes('offer') || query.includes('discount')) {
-      return 'Current Mellodi promotions include:\n- Get a 30% discount welcome voucher upon registration.\n- Accumulate 10% LEN points on all purchases.\n- Free birthday drink voucher for Green & Gold VIP members. Register now to claim!';
+      return 'Current Mellodi promotions include:\n- Get a 30% discount welcome voucher upon registration.\n- Accumulate 10% LEN points on all purchases (e.g. 100,000đ spent = 10,000 points).\n- Free welcome vouchers when upgrading to Mellodi Gold (30% off) and Mellodi Premium (50% off). Register now to claim!';
     }
     if (query.includes('j2h2') || query.includes('company') || query.includes('j2h2 global')) {
       return 'Mellodi is proudly owned and operated by J2H2 Global Joint Stock Company, bringing technological innovation to Vietnam\'s specialty coffee sector.';

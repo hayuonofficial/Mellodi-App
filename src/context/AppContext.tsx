@@ -10,7 +10,7 @@ export interface AppUser {
   phone: string;
   walletBalance: number;
   lenPoints: number;
-  tier: 'Welcome' | 'Green' | 'Gold';
+  tier: 'Mellodi Basic' | 'Mellodi Gold' | 'Mellodi Premium';
   createdAt: string;
   biometricEnabled?: boolean;
   biometricToken?: string;
@@ -64,8 +64,8 @@ interface AppContextProps {
   setLenPoints: React.Dispatch<React.SetStateAction<number>>;
   setWalletBalance: React.Dispatch<React.SetStateAction<number>>;
   setOrders: React.Dispatch<React.SetStateAction<Order[]>>;
-  tierUpgradeInfo: { tier: 'Welcome' | 'Green' | 'Gold'; voucher: Voucher } | null;
-  setTierUpgradeInfo: React.Dispatch<React.SetStateAction<{ tier: 'Welcome' | 'Green' | 'Gold'; voucher: Voucher } | null>>;
+  tierUpgradeInfo: { tier: 'Mellodi Basic' | 'Mellodi Gold' | 'Mellodi Premium'; voucher: Voucher } | null;
+  setTierUpgradeInfo: React.Dispatch<React.SetStateAction<{ tier: 'Mellodi Basic' | 'Mellodi Gold' | 'Mellodi Premium'; voucher: Voucher } | null>>;
 }
 
 const AppContext = createContext<AppContextProps | undefined>(undefined);
@@ -111,7 +111,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [appliedVoucher, setAppliedVoucher] = useState<Voucher | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
-  const [tierUpgradeInfo, setTierUpgradeInfo] = useState<{ tier: 'Welcome' | 'Green' | 'Gold'; voucher: Voucher } | null>(null);
+  const [tierUpgradeInfo, setTierUpgradeInfo] = useState<{ tier: 'Mellodi Basic' | 'Mellodi Gold' | 'Mellodi Premium'; voucher: Voucher } | null>(null);
 
   const [savedStores, setSavedStores] = useState<string[]>(() => {
     const saved = localStorage.getItem('mellodi_saved_stores');

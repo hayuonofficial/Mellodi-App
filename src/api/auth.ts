@@ -70,7 +70,7 @@ router.post("/register", async (req, res) => {
       password: hashedPassword,
       walletBalance: 0,
       lenPoints: 0,
-      tier: "Welcome",
+      tier: "Mellodi Basic",
       createdAt: new Date().toISOString(),
     };
 

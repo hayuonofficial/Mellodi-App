@@ -139,7 +139,7 @@ export const AuthPortal: React.FC = () => {
               <Star className="w-3 h-3 text-[#A37B45] fill-[#A37B45]" />
             </div>
           </div>
-          <p className="font-mono tracking-widest text-[11px] uppercase">Welcome Rewards Tier</p>
+          <p className="font-mono tracking-widest text-[11px] uppercase">Mellodi Basic Rewards Tier</p>
           <div className="mt-4 flex justify-between items-end">
             <span className="text-[10px] text-white/50">MEMBER SINCE 2026</span>
             <span className="text-sm font-serif font-bold text-amber-300">0 LEN</span>

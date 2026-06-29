@@ -55,7 +55,7 @@ export interface Voucher {
 export interface UserState {
   walletBalance: number; // stored in base VND. 1,000 VND = 1,000 Wallet points
   lenPoints: number; // loyalty points. 1,000 VND top-up = 1,000 LEN points. Pay using LEN points
-  tier: 'Welcome' | 'Green' | 'Gold';
+  tier: 'Mellodi Basic' | 'Mellodi Gold' | 'Mellodi Premium';
   savedStores: string[];
   currentStoreId: string | null;
 }
