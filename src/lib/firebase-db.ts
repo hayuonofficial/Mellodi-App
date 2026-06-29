@@ -99,6 +99,7 @@ export interface UserRecord {
     linkedAt: string;
     secretKey: string;
     loginToken?: string;
+    pin?: string;
   };
 }
 

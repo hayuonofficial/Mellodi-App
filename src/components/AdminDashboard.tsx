@@ -116,8 +116,10 @@ export const AdminDashboard: React.FC = () => {
   const [posScannedUser, setPosScannedUser] = useState<any | null>(null);
   const [posActionType, setPosActionType] = useState<'points' | 'pay' | 'topup'>('points');
   const [posActionAmount, setPosActionAmount] = useState<number>(100000);
+  const [posActionPin, setPosActionPin] = useState<string>('');
   const [posActionState, setPosActionState] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [posActionMsg, setPosActionMsg] = useState<string>('');
+  const [nfcWritePin, setNfcWritePin] = useState<string>('123456');
 
   // Data states
   const [customers, setCustomers] = useState<CustomerSummary[]>([]);
@@ -718,6 +720,19 @@ export const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Card PIN Input */}
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Thiết lập mã PIN thẻ (6 chữ số)</label>
+                        <input
+                          type="password"
+                          maxLength={6}
+                          value={nfcWritePin}
+                          onChange={(e) => setNfcWritePin(e.target.value.replace(/\D/g, ''))}
+                          placeholder="Mặc định: 123456"
+                          className="w-full px-3 py-2 bg-stone-55 border border-coffee-200 rounded-xl text-xs font-mono font-bold text-stone-900"
+                        />
+                      </div>
+
                       <button
                         type="button"
                         disabled={!nfcSelectedCustomerId || !nfcWriteCardId || nfcWriteState === 'writing'}
@@ -744,7 +759,8 @@ export const AdminDashboard: React.FC = () => {
                               headers: { 'Content-Type': 'application/json' },
                               body: JSON.stringify({
                                 userId: nfcSelectedCustomerId,
-                                cardId: nfcWriteCardId
+                                cardId: nfcWriteCardId,
+                                pin: nfcWritePin
                               })
                             });
                             const data = await response.json();
@@ -956,6 +972,21 @@ export const AdminDashboard: React.FC = () => {
                               </div>
                             </div>
 
+                            {/* PIN Code Input for Payment */}
+                            {posActionType === 'pay' && (
+                              <div className="space-y-1">
+                                <label className="text-[8px] font-bold text-[#4E342E] uppercase tracking-wider block">Mã PIN xác thực thẻ (Khách hàng đọc PIN)</label>
+                                <input
+                                  type="password"
+                                  maxLength={6}
+                                  value={posActionPin}
+                                  onChange={(e) => setPosActionPin(e.target.value.replace(/\D/g, ''))}
+                                  placeholder="Nhập 6 chữ số PIN..."
+                                  className="w-full px-3 py-1.5 bg-white border border-stone-200 rounded-lg text-xs font-mono font-bold text-stone-900 focus:outline-hidden"
+                                />
+                              </div>
+                            )}
+
                             <button
                               type="button"
                               disabled={posActionState === 'loading' || posActionAmount <= 0}
@@ -978,7 +1009,8 @@ export const AdminDashboard: React.FC = () => {
                                       cardId: posScanCardId,
                                       amountVND: amount,
                                       timestamp,
-                                      signature
+                                      signature,
+                                      pin: posActionPin
                                     })
                                   });
                                   const data = await response.json();

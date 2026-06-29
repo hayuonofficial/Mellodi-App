@@ -27,7 +27,7 @@ router.get("/:id", async (req, res) => {
 
 // API: Link NFC Card to User (NTAG215)
 router.post("/nfc/link", async (req, res) => {
-  const { userId, cardId } = req.body;
+  const { userId, cardId, pin } = req.body;
 
   if (!userId || !cardId) {
     return res.status(400).json({ error: "Thiếu thông tin người dùng hoặc ID thẻ NFC!" });
@@ -48,6 +48,7 @@ router.post("/nfc/link", async (req, res) => {
     // Generate a unique 32-character secret key for dynamic HMAC verification (anti-cloning)
     const secretKey = crypto.randomBytes(16).toString("hex");
     const loginToken = crypto.randomBytes(20).toString("hex");
+    const cardPin = pin || "123456";
 
     const updatedUser = await updateUser(userId, {
       nfcCard: {
@@ -55,7 +56,8 @@ router.post("/nfc/link", async (req, res) => {
         status: "active",
         linkedAt: new Date().toISOString(),
         secretKey,
-        loginToken
+        loginToken,
+        pin: cardPin
       }
     });
 
@@ -131,7 +133,7 @@ router.post("/nfc/verify", async (req, res) => {
 
 // API: Process NFC Card Payment (Deduct from prepaid wallet and award 10% points)
 router.post("/nfc/pay", async (req, res) => {
-  const { cardId, amountVND, timestamp, signature } = req.body;
+  const { cardId, amountVND, timestamp, signature, pin } = req.body;
 
   if (!cardId || !amountVND || !timestamp || !signature) {
     return res.status(400).json({ error: "Thiếu thông tin giao dịch NFC!" });
@@ -145,6 +147,11 @@ router.post("/nfc/pay", async (req, res) => {
 
     if (user.nfcCard.status !== "active") {
       return res.status(403).json({ error: "Thẻ NFC này đã bị khóa!" });
+    }
+
+    // Verify PIN code
+    if (user.nfcCard.pin && pin !== user.nfcCard.pin) {
+      return res.status(401).json({ error: "Giao dịch bị từ chối: Mã PIN thẻ NFC không chính xác!" });
     }
 
     // Verify dynamic signature incorporating amount to prevent tampering
@@ -217,9 +224,8 @@ router.post("/nfc/topup", async (req, res) => {
       return res.status(403).json({ error: "Nạp tiền thất bại: Chữ ký bảo mật không hợp lệ!" });
     }
 
-    // Add balance and award 10% points
-    const bonusPoints = Math.round(amountVND * 0.1);
-    const updatedUser = await updateUserPointsAndTier(user.id, bonusPoints, amountVND);
+    // Add balance without awarding points (points are only earned when spending at Mellodi)
+    const updatedUser = await updateUserPointsAndTier(user.id, 0, amountVND);
 
     if (!updatedUser) {
       return res.status(500).json({ error: "Không thể nạp tiền vào tài khoản!" });
@@ -234,9 +240,9 @@ router.post("/nfc/topup", async (req, res) => {
         ko: "NFC 카드 충전 완료 💰"
       },
       {
-        vi: `Đã nạp thành công ${amountVND.toLocaleString("vi-VN")}đ vào tài khoản thẻ NFC của bạn tại quầy. Nhận thêm +${bonusPoints.toLocaleString("vi-VN")} điểm LEN!`,
-        en: `Successfully topped up ${amountVND.toLocaleString()}đ to your NFC card at the counter. Earned +${bonusPoints.toLocaleString()} bonus LEN points!`,
-        ko: `카운터에서 NFC 카드에 ${amountVND.toLocaleString()}đ 충전이 완료되었습니다. +${bonusPoints.toLocaleString()} LEN 포인트가 적립되었습니다!`
+        vi: `Đã nạp thành công ${amountVND.toLocaleString("vi-VN")}đ vào tài khoản thẻ NFC của bạn tại quầy. Dòng tiền đã được ghi nhận vào hệ thống.`,
+        en: `Successfully topped up ${amountVND.toLocaleString()}đ to your NFC card at the counter. Cash flow has been recorded.`,
+        ko: `카운터에서 NFC 카드에 ${amountVND.toLocaleString()}đ 충전이 완료되었습니다. 거래 내역이 시스템에 기록되었습니다.`
       },
       "wallet"
     );

@@ -21,6 +21,7 @@ export interface AppUser {
     linkedAt: string;
     secretKey: string;
     loginToken?: string;
+    pin?: string;
   };
 }
 

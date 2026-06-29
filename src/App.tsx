@@ -67,6 +67,33 @@ function AppContent() {
   }, [currentUser]);
 
   React.useEffect(() => {
+    if (!currentUser) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    const resetTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        logoutUser();
+        alert(language === 'vi' 
+          ? "Tài khoản của bạn đã tự động đăng xuất sau 5 phút không hoạt động để bảo vệ số dư thẻ ví!" 
+          : "Your account has been automatically logged out after 5 minutes of inactivity to protect your card balance!");
+      }, 5 * 60 * 1000); // 5 minutes
+    };
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    const handleEvent = () => resetTimer();
+    
+    events.forEach(event => window.addEventListener(event, handleEvent));
+    resetTimer();
+
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => window.removeEventListener(event, handleEvent));
+    };
+  }, [currentUser, logoutUser, language]);
+
+  React.useEffect(() => {
     const checkIfMobile = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
       const isSmallScreen = window.innerWidth < 768;

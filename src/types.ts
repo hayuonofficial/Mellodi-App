@@ -64,6 +64,7 @@ export interface UserState {
     linkedAt: string;
     secretKey: string;
     loginToken?: string;
+    pin?: string;
   };
 }
 
