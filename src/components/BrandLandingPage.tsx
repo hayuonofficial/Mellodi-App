@@ -3,9 +3,11 @@ import { useApp } from '../context/AppContext';
 import { translations } from '../translations';
 import { 
   Coffee, MapPin, Star, BookOpen, 
-  ArrowRight, Compass, Phone, Mail, Clock, Building, X
+  ArrowRight, Compass, Phone, Mail, Clock, Building, X,
+  Award, Wallet, CreditCard, Gift, History, Plus, Ticket, Check
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { AuthPortal } from './AuthPortal';
 
 interface BrandLandingPageProps {
   activeSection: string;
@@ -13,7 +15,17 @@ interface BrandLandingPageProps {
 }
 
 export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSection, onOpenApp }) => {
-  const { language } = useApp();
+  const { 
+    language, 
+    currentUser, 
+    walletBalance, 
+    lenPoints, 
+    orders, 
+    vouchers, 
+    claimVoucherByCode, 
+    topUpWallet,
+    formatPrice
+  } = useApp();
   
   // State for 3D tilt effect on menu cards
   const [tiltStyles, setTiltStyles] = useState<Record<string, string>>({});
@@ -22,6 +34,13 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
   const [activeExplosionProduct, setActiveExplosionProduct] = useState<string | null>(null);
   const [isExploded, setIsExploded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  // States for membership dashboard
+  const [voucherCode, setVoucherCode] = useState('');
+  const [claimStatus, setClaimStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [topUpAmount, setTopUpAmount] = useState<number>(50000);
+  const [topUpStatus, setTopUpStatus] = useState<{ success?: boolean; message?: string } | null>(null);
+  const [isTopUpLoading, setIsTopUpLoading] = useState(false);
 
   // Check screen size for responsive explosion radius
   useEffect(() => {
@@ -629,6 +648,350 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                   <span className="text-[10px] text-center font-mono text-coffee-950">MELLODI</span>
                 </div>
               </div>
+            </div>
+          </motion.div>
+        );
+
+      case 'membership':
+        if (!currentUser) {
+          return (
+            <motion.div
+              key="slide-membership-auth"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.5 }}
+              className="py-4"
+            >
+              <div className="max-w-xl mx-auto space-y-3 text-center mb-8">
+                <span className="text-xs font-bold text-[#4E342E] uppercase tracking-wider block">Mellodi Coffee Portal</span>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-coffee-950">Đăng Ký & Đăng Nhập Thành Viên</h2>
+                <p className="text-xs text-stone-500 leading-relaxed font-semibold">
+                  Trở thành thành viên Mellodi Coffee để nhận ngay nhiều ưu đãi đặc quyền, tích điểm LEN đổi quà và thanh toán ví tiện lợi.
+                </p>
+              </div>
+              <AuthPortal />
+            </motion.div>
+          );
+        }
+
+        return (
+          <motion.div
+            key="slide-membership-dashboard"
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-8 py-4"
+          >
+            {/* Header section */}
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 border-b border-coffee-100 pb-5">
+              <div className="text-left">
+                <span className="text-xs font-bold text-[#A37B45] uppercase tracking-wider block">Mellodi Member Club</span>
+                <h2 className="font-serif text-2xl sm:text-3xl font-bold text-coffee-950">Xin chào, {currentUser.name}!</h2>
+                <p className="text-xs text-stone-500 mt-1 font-semibold">
+                  Chúc bạn một ngày tuyệt vời cùng hương vị cà phê Mellodi đặc biệt.
+                </p>
+              </div>
+              <div className="flex items-center space-x-3 bg-stone-50 border border-coffee-100 px-4 py-2.5 rounded-2xl shadow-2xs self-start md:self-auto">
+                <span className="text-xs font-bold text-stone-550">Hạng thành viên:</span>
+                <span className={`text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider ${
+                  currentUser.tier === 'Gold' 
+                    ? 'bg-amber-100 text-amber-800 border border-amber-200' 
+                    : currentUser.tier === 'Green'
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                    : 'bg-stone-200 text-stone-700'
+                }`}>
+                  {currentUser.tier}
+                </span>
+              </div>
+            </div>
+
+            {/* Dashboard Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+              
+              {/* LEFT COLUMN (Grid 4): Member Card & Quick Top-up */}
+              <div className="lg:col-span-4 space-y-6">
+                
+                {/* Holographic Member Card */}
+                <div className="relative bg-gradient-to-br from-[#2D5A47] to-[#1F3F32] text-white p-6 rounded-3xl shadow-xl overflow-hidden min-h-[220px] flex flex-col justify-between border border-white/10 group transition-all duration-300 hover:shadow-2xl">
+                  {/* Glowing background circles */}
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                  <div className="absolute -bottom-10 -left-10 w-24 h-24 bg-[#A37B45]/20 rounded-full blur-xl pointer-events-none"></div>
+                  
+                  <div className="flex justify-between items-start z-10">
+                    <div>
+                      <span className="font-serif font-extrabold text-lg tracking-widest text-white block">MELLODI</span>
+                      <span className="text-[8px] text-amber-300 block font-bold uppercase tracking-widest mt-0.5">Loyalty Member</span>
+                    </div>
+                    <Award className={`w-7 h-7 ${
+                      currentUser.tier === 'Gold' ? 'text-amber-300' : currentUser.tier === 'Green' ? 'text-emerald-300' : 'text-stone-300'
+                    }`} />
+                  </div>
+
+                  <div className="space-y-1.5 z-10 my-4 text-left">
+                    <span className="text-[8px] text-white/50 block font-mono uppercase tracking-wider">Mã thành viên</span>
+                    <span className="font-mono text-sm tracking-widest text-white">{currentUser.id.toUpperCase()}</span>
+                    {/* Mock Barcode */}
+                    <div className="h-6 w-full bg-white/10 rounded-sm flex items-center justify-between px-2 overflow-hidden opacity-80 group-hover:opacity-100 transition-opacity">
+                      {[...Array(24)].map((_, i) => (
+                        <div 
+                          key={i} 
+                          className="h-full bg-white" 
+                          style={{ width: `${[1, 2, 3, 1, 4, 2, 1, 3][i % 8]}px` }} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-end z-10 pt-2 border-t border-white/15">
+                    <div className="text-left">
+                      <span className="text-[8px] text-white/40 block">Hội viên từ</span>
+                      <span className="text-[10px] font-bold text-white uppercase">
+                        {new Date(currentUser.createdAt).toLocaleDateString(language === 'vi' ? 'vi-VN' : 'en-US', { year: 'numeric', month: 'short' })}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[8px] text-white/40 block">Tích lũy</span>
+                      <span className="text-sm font-black text-amber-300 font-mono">{lenPoints.toLocaleString()} LEN</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Wallet Info & Top-up */}
+                <div className="bg-white border border-coffee-100 rounded-3xl p-6 shadow-2xs space-y-5 text-left">
+                  <h4 className="font-serif text-sm font-bold text-coffee-950 flex items-center space-x-2">
+                    <Wallet className="w-4 h-4 text-[#A37B45]" />
+                    <span>Số Dư Ví Thành Viên</span>
+                  </h4>
+                  <div className="bg-stone-55 border border-coffee-100 rounded-2xl p-4 flex justify-between items-center">
+                    <div>
+                      <span className="text-[9px] text-stone-450 font-bold uppercase tracking-wider block">Ví Mellodi Pay</span>
+                      <span className="text-xl font-black text-coffee-950 font-mono mt-1 block">
+                        {formatPrice(walletBalance)}
+                      </span>
+                    </div>
+                    <CreditCard className="w-8 h-8 text-coffee-300" />
+                  </div>
+
+                  {/* Simulate Top-up Form */}
+                  <div className="space-y-3 pt-2">
+                    <label className="text-[10px] font-bold text-coffee-900 uppercase tracking-wider block">Nạp tiền nhanh vào ví</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[50000, 100000, 200000].map((amount) => (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => setTopUpAmount(amount)}
+                          className={`py-1.5 px-2 rounded-xl text-[10px] font-mono font-bold border transition-all cursor-pointer ${
+                            topUpAmount === amount
+                              ? 'bg-[#2D5A47] border-[#2D5A47] text-white'
+                              : 'bg-stone-55 border-coffee-100 text-stone-600 hover:bg-stone-100'
+                          }`}
+                        >
+                          +{amount.toLocaleString()}đ
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isTopUpLoading}
+                      onClick={async () => {
+                        setIsTopUpLoading(true);
+                        setTopUpStatus(null);
+                        try {
+                          const res = await topUpWallet(topUpAmount, 'vietqr');
+                          if (res.success) {
+                            setTopUpStatus({
+                              success: true,
+                              message: `Nạp thành công ${topUpAmount.toLocaleString()}đ vào ví! (Đã cộng thêm 10% LEN thưởng)`
+                            });
+                          } else {
+                            setTopUpStatus({ success: false, message: res.message });
+                          }
+                        } catch (err) {
+                          setTopUpStatus({ success: false, message: 'Lỗi nạp tiền.' });
+                        }
+                        setIsTopUpLoading(false);
+                      }}
+                      className="w-full py-2.5 bg-[#2D5A47] hover:bg-[#1E3F31] text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center justify-center space-x-1.5 cursor-pointer"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>{isTopUpLoading ? 'Đang xử lý...' : 'Xác nhận nạp tiền'}</span>
+                    </button>
+
+                    {topUpStatus && (
+                      <div className={`p-2 rounded-xl text-[10px] font-semibold border text-center mt-2 ${
+                        topUpStatus.success 
+                          ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+                          : 'bg-rose-50 border-rose-100 text-rose-800'
+                      }`}>
+                        {topUpStatus.message}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+              {/* RIGHT COLUMN (Grid 8): Vouchers & Orders */}
+              <div className="lg:col-span-8 space-y-6 text-left">
+                
+                {/* Active Vouchers */}
+                <div className="bg-white border border-coffee-100 rounded-3xl p-6 shadow-2xs space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 border-b border-coffee-50 pb-3">
+                    <h4 className="font-serif text-sm font-bold text-coffee-950 flex items-center space-x-2">
+                      <Ticket className="w-4.5 h-4.5 text-[#A37B45]" />
+                      <span>Voucher Ưu Đãi Của Tôi ({vouchers.filter(v => !v.used).length})</span>
+                    </h4>
+                    {/* Claim Voucher input */}
+                    <div className="flex items-center space-x-2 max-w-xs w-full sm:w-auto">
+                      <input
+                        type="text"
+                        value={voucherCode}
+                        onChange={(e) => setVoucherCode(e.target.value)}
+                        placeholder="Mã ưu đãi (VD: WELCOMEGOLD)"
+                        className="w-full px-3 py-1.5 border border-coffee-200 rounded-xl text-[10px] focus:ring-1 focus:ring-[#2D5A47] focus:border-transparent outline-none bg-stone-50"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!voucherCode.trim()) return;
+                          const res = claimVoucherByCode(voucherCode.trim());
+                          setClaimStatus(res);
+                          if (res.success) {
+                            setVoucherCode('');
+                          }
+                          setTimeout(() => setClaimStatus(null), 4000);
+                        }}
+                        className="px-3.5 py-1.5 bg-[#4E342E] hover:bg-[#3E2723] text-white text-[10px] font-bold rounded-xl shrink-0 cursor-pointer transition-colors"
+                      >
+                        Nhận mã
+                      </button>
+                    </div>
+                  </div>
+
+                  {claimStatus && (
+                    <div className={`p-2 rounded-xl text-[10px] font-semibold border ${
+                      claimStatus.success 
+                        ? 'bg-emerald-50 border-emerald-100 text-emerald-800' 
+                        : 'bg-rose-50 border-rose-100 text-rose-800'
+                    }`}>
+                      {claimStatus.message}
+                    </div>
+                  )}
+
+                  {/* Vouchers Grid */}
+                  {vouchers.filter(v => !v.used).length === 0 ? (
+                    <div className="py-6 text-center">
+                      <p className="text-xs text-stone-400 font-semibold">Bạn không có voucher khả dụng nào.</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+                      {vouchers.filter(v => !v.used).map((voucher) => (
+                        <div 
+                          key={voucher.id}
+                          className="border border-coffee-100 rounded-2xl p-4 bg-stone-50 flex items-start justify-between relative overflow-hidden group hover:border-coffee-200 transition-colors"
+                        >
+                          {/* Left decorative circle */}
+                          <div className="absolute top-1/2 -left-2.5 -translate-y-1/2 w-5 h-5 bg-white border-r border-coffee-100 rounded-full"></div>
+                          {/* Right decorative circle */}
+                          <div className="absolute top-1/2 -right-2.5 -translate-y-1/2 w-5 h-5 bg-white border-l border-coffee-100 rounded-full"></div>
+
+                          <div className="space-y-1 pl-2 text-left">
+                            <span className="text-[8px] font-black text-amber-600 bg-amber-100 px-2 py-0.5 rounded-md uppercase tracking-wider">
+                              Code: {voucher.code}
+                            </span>
+                            <h5 className="font-serif font-bold text-xs text-coffee-950 mt-1.5">
+                              {voucher.title[language] || voucher.title['vi']}
+                            </h5>
+                            <p className="text-[10px] text-stone-555 leading-normal max-w-[190px] font-medium">
+                              {voucher.description[language] || voucher.description['vi']}
+                            </p>
+                            <p className="text-[9px] text-stone-400 font-mono mt-1">
+                              Hạn dùng: {voucher.expiryDate}
+                            </p>
+                          </div>
+
+                          <Gift className="w-5 h-5 text-coffee-300 mr-2 shrink-0 self-center" />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Recent Orders */}
+                <div className="bg-white border border-coffee-100 rounded-3xl p-6 shadow-2xs space-y-4">
+                  <h4 className="font-serif text-sm font-bold text-coffee-950 flex items-center space-x-2 border-b border-coffee-50 pb-3">
+                    <History className="w-4.5 h-4.5 text-[#A37B45]" />
+                    <span>Lịch Sử Đơn Hàng Gần Đây</span>
+                  </h4>
+
+                  {orders.length === 0 ? (
+                    <div className="py-12 text-center space-y-2">
+                      <span className="text-3xl block">☕</span>
+                      <p className="text-xs text-stone-400 font-bold">Bạn chưa có đơn hàng nào.</p>
+                      <button
+                        onClick={onOpenApp}
+                        className="text-[10px] font-black text-[#2D5A47] hover:underline cursor-pointer"
+                      >
+                        Bắt đầu đặt món ngay trên ứng dụng di động →
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-coffee-100 text-[10px] font-extrabold text-stone-400 uppercase tracking-wider">
+                            <th className="py-3 px-2">Mã Đơn</th>
+                            <th className="py-3 px-2">Thời Gian</th>
+                            <th className="py-3 px-2">Món Ăn/Uống</th>
+                            <th className="py-3 px-2 text-right">Tổng Tiền</th>
+                            <th className="py-3 px-2 text-right">Trạng Thái</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-100 text-xs font-semibold">
+                          {orders.slice(0, 5).map((order) => (
+                            <tr key={order.id} className="hover:bg-stone-50/50 transition-colors">
+                              <td className="py-3 px-2 font-mono font-bold text-coffee-950">
+                                #{order.id.replace('ord-', '').toUpperCase()}
+                              </td>
+                              <td className="py-3 px-2 text-stone-500 whitespace-nowrap font-medium">
+                                {new Date(order.date).toLocaleString(language === 'vi' ? 'vi-VN' : 'en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </td>
+                              <td className="py-3 px-2 text-stone-600 max-w-[200px] truncate font-medium">
+                                {order.items.map(item => `${item.name[language] || item.name} (x${item.quantity})`).join(', ')}
+                              </td>
+                              <td className="py-3 px-2 text-right font-mono font-bold text-coffee-950">
+                                {formatPrice(order.totalPrice)}
+                              </td>
+                              <td className="py-3 px-2 text-right">
+                                <span className={`inline-block text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                                  order.status === 'completed' || order.status === 'success'
+                                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                                    : order.status === 'cancelled' || order.status === 'failed'
+                                    ? 'bg-rose-50 text-rose-800 border border-rose-100'
+                                    : 'bg-amber-50 text-amber-800 border border-amber-100'
+                                }`}>
+                                  {order.status === 'completed' || order.status === 'success' ? 'Hoàn thành' : order.status === 'cancelled' ? 'Đã hủy' : 'Đang xử lý'}
+                                </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+              </div>
+
             </div>
           </motion.div>
         );

@@ -372,7 +372,8 @@ function AppContent() {
                 { id: 'story', label: translations[language]['landing.story.tag'] },
                 { id: 'space', label: translations[language]['landing.space.tag'] },
                 { id: 'menu', label: translations[language]['landing.menu.tag'] },
-                { id: 'promo', label: translations[language]['landing.promo.tag'] }
+                { id: 'promo', label: translations[language]['landing.promo.tag'] },
+                { id: 'membership', label: language === 'vi' ? 'Thành viên' : language === 'ko' ? '멤버십' : 'Membership' }
               ].map((item) => (
                 <button
                   key={item.id}
@@ -412,18 +413,25 @@ function AppContent() {
 
               {currentUser ? (
                 <div className="flex items-center space-x-3 bg-stone-50 border border-coffee-100 px-3 py-1.5 rounded-xl">
-                  {/* User Profile Summary */}
-                  <div className="text-right text-xs">
-                    <p className="font-bold text-coffee-950 leading-none">{currentUser.name}</p>
-                    <p className="text-[9px] text-amber-600 font-bold mt-0.5">
-                      {currentUser.tier.toUpperCase()} MEMBER
-                    </p>
+                  {/* Clickable Area to go to Membership section */}
+                  <div 
+                    onClick={() => setActiveWebSection('membership')}
+                    className="flex items-center space-x-3 cursor-pointer hover:opacity-85 transition-all"
+                  >
+                    {/* User Profile Summary */}
+                    <div className="text-right text-xs">
+                      <p className="font-bold text-coffee-950 leading-none">{currentUser.name}</p>
+                      <p className="text-[9px] text-amber-600 font-bold mt-0.5">
+                        {currentUser.tier.toUpperCase()} MEMBER
+                      </p>
+                    </div>
+                    <div className="h-7 w-px bg-coffee-100"></div>
+                    <div className="text-left text-[10px] text-stone-500 font-medium">
+                      <p>Ví: <span className="font-bold text-coffee-900 font-mono">{currentUser.walletBalance.toLocaleString()}đ</span></p>
+                      <p>LEN: <span className="font-bold text-amber-500 font-mono">{currentUser.lenPoints.toLocaleString()}</span></p>
+                    </div>
                   </div>
                   <div className="h-7 w-px bg-coffee-100"></div>
-                  <div className="text-left text-[10px] text-stone-500 font-medium">
-                    <p>Ví: <span className="font-bold text-coffee-900 font-mono">{currentUser.walletBalance.toLocaleString()}đ</span></p>
-                    <p>LEN: <span className="font-bold text-amber-500 font-mono">{currentUser.lenPoints.toLocaleString()}</span></p>
-                  </div>
                   <button
                     onClick={() => logoutUser()}
                     className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-black rounded-lg transition-colors cursor-pointer"
@@ -434,7 +442,7 @@ function AppContent() {
               ) : (
                 <div className="flex items-center space-x-2">
                   <button
-                    onClick={() => setShowWebAuthModal(true)}
+                    onClick={() => setActiveWebSection('membership')}
                     className="px-4 py-2 bg-[#4E342E] hover:bg-[#3E2723] text-white text-xs font-bold rounded-xl shadow-xs transition-all cursor-pointer"
                   >
                     {language === 'vi' ? 'Đăng nhập / Đăng ký' : language === 'ko' ? '로그인 / 회원가입' : 'Login / Register'}

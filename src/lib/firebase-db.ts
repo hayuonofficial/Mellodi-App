@@ -14,6 +14,16 @@ import {
 import fs from "fs";
 import path from "path";
 
+// Helper to wrap Firestore operations with a timeout to prevent hanging when offline or blocked
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 3500): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<never>((_, reject) => 
+      setTimeout(() => reject(new Error("Firestore operation timeout")), timeoutMs)
+    )
+  ]);
+}
+
 // Support both Cloud Firestore (production/connected environment) and local JSON (development/offline environment)
 let firestoreDb: any = null;
 export let isFirebaseAvailable = false;
@@ -197,7 +207,7 @@ export async function getUser(userId: string): Promise<UserRecord | null> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const userRef = doc(firestoreDb, "users", userId);
-      const userSnap = await getDoc(userRef);
+      const userSnap = await withTimeout(getDoc(userRef));
       if (userSnap.exists()) {
         return { id: userSnap.id, ...userSnap.data() } as UserRecord;
       }
@@ -215,7 +225,7 @@ export async function getUserByEmail(email: string): Promise<UserRecord | null> 
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = query(collection(firestoreDb, "users"), where("email", "==", cleanEmail));
-      const querySnap = await getDocs(q);
+      const querySnap = await withTimeout(getDocs(q));
       if (!querySnap.empty) {
         const docSnap = querySnap.docs[0];
         return { id: docSnap.id, ...docSnap.data() } as UserRecord;
@@ -232,7 +242,7 @@ export async function getUserByEmail(email: string): Promise<UserRecord | null> 
 export async function createUser(user: UserRecord): Promise<void> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await setDoc(doc(firestoreDb, "users", user.id), user);
+      await withTimeout(setDoc(doc(firestoreDb, "users", user.id), user));
       return;
     } catch (e) {
       console.error("[Database] Error creating user in Firestore, falling back:", e);
@@ -247,8 +257,8 @@ export async function updateUser(userId: string, updates: Partial<UserRecord>): 
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const userRef = doc(firestoreDb, "users", userId);
-      await updateDoc(userRef, updates);
-      const userSnap = await getDoc(userRef);
+      await withTimeout(updateDoc(userRef, updates));
+      const userSnap = await withTimeout(getDoc(userRef));
       return { id: userSnap.id, ...userSnap.data() } as UserRecord;
     } catch (e) {
       console.error("[Database] Error updating user in Firestore, falling back:", e);
@@ -268,7 +278,7 @@ export async function updateUser(userId: string, updates: Partial<UserRecord>): 
 export async function createOrder(order: OrderRecord): Promise<void> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await setDoc(doc(firestoreDb, "orders", order.id), order);
+      await withTimeout(setDoc(doc(firestoreDb, "orders", order.id), order));
       return;
     } catch (e) {
       console.error("[Database] Error creating order in Firestore, falling back:", e);
@@ -283,7 +293,7 @@ export async function getUserOrders(userId: string): Promise<OrderRecord[]> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = query(collection(firestoreDb, "orders"), where("userId", "==", userId));
-      const querySnap = await getDocs(q);
+      const querySnap = await withTimeout(getDocs(q));
       const orders = querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as OrderRecord[];
       return orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
@@ -298,7 +308,7 @@ export async function getOrder(orderId: string): Promise<OrderRecord | null> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const orderRef = doc(firestoreDb, "orders", orderId);
-      const orderSnap = await getDoc(orderRef);
+      const orderSnap = await withTimeout(getDoc(orderRef));
       if (orderSnap.exists()) {
         return { id: orderSnap.id, ...orderSnap.data() } as OrderRecord;
       }
@@ -315,8 +325,8 @@ export async function updateOrder(orderId: string, updates: Partial<OrderRecord>
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const orderRef = doc(firestoreDb, "orders", orderId);
-      await updateDoc(orderRef, updates);
-      const orderSnap = await getDoc(orderRef);
+      await withTimeout(updateDoc(orderRef, updates));
+      const orderSnap = await withTimeout(getDoc(orderRef));
       return { id: orderSnap.id, ...orderSnap.data() } as OrderRecord;
     } catch (e) {
       console.error("[Database] Error updating order in Firestore, falling back:", e);
@@ -336,7 +346,7 @@ export async function updateOrder(orderId: string, updates: Partial<OrderRecord>
 export async function createTransaction(tx: TransactionRecord): Promise<void> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await setDoc(doc(firestoreDb, "transactions", tx.id), tx);
+      await withTimeout(setDoc(doc(firestoreDb, "transactions", tx.id), tx));
       return;
     } catch (e) {
       console.error("[Database] Error creating transaction in Firestore, falling back:", e);
@@ -351,7 +361,7 @@ export async function getUserTransactions(userId: string): Promise<TransactionRe
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = query(collection(firestoreDb, "transactions"), where("userId", "==", userId));
-      const querySnap = await getDocs(q);
+      const querySnap = await withTimeout(getDocs(q));
       const txs = querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as TransactionRecord[];
       return txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
@@ -366,7 +376,7 @@ export async function getUserTransactions(userId: string): Promise<TransactionRe
 export async function createRedeemedGift(gift: RedeemedGift): Promise<void> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await setDoc(doc(firestoreDb, "redeemedGifts", gift.id), gift);
+      await withTimeout(setDoc(doc(firestoreDb, "redeemedGifts", gift.id), gift));
       return;
     } catch (e) {
       console.error("[Database] Error creating redeemed gift in Firestore, falling back:", e);
@@ -382,7 +392,7 @@ export async function getUserRedeemedGifts(userId: string): Promise<RedeemedGift
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = query(collection(firestoreDb, "redeemedGifts"), where("userId", "==", userId));
-      const querySnap = await getDocs(q);
+      const querySnap = await withTimeout(getDocs(q));
       const gifts = querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as RedeemedGift[];
       return gifts.sort((a, b) => new Date(b.redeemedDate).getTime() - new Date(a.redeemedDate).getTime());
     } catch (e) {
@@ -397,7 +407,7 @@ export async function getRedeemedGift(giftId: string): Promise<RedeemedGift | nu
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const giftRef = doc(firestoreDb, "redeemedGifts", giftId);
-      const giftSnap = await getDoc(giftRef);
+      const giftSnap = await withTimeout(getDoc(giftRef));
       if (giftSnap.exists()) {
         return { id: giftSnap.id, ...giftSnap.data() } as RedeemedGift;
       }
@@ -414,8 +424,8 @@ export async function updateRedeemedGift(giftId: string, updates: Partial<Redeem
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const giftRef = doc(firestoreDb, "redeemedGifts", giftId);
-      await updateDoc(giftRef, updates);
-      const giftSnap = await getDoc(giftRef);
+      await withTimeout(updateDoc(giftRef, updates));
+      const giftSnap = await withTimeout(getDoc(giftRef));
       return { id: giftSnap.id, ...giftSnap.data() } as RedeemedGift;
     } catch (e) {
       console.error("[Database] Error updating redeemed gift in Firestore, falling back:", e);
@@ -437,7 +447,7 @@ export async function getUserNotifications(userId: string): Promise<UserNotifica
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = query(collection(firestoreDb, "notifications"), where("userId", "==", userId));
-      const querySnap = await getDocs(q);
+      const querySnap = await withTimeout(getDocs(q));
       const notifs = querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UserNotification[];
       return notifs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
@@ -451,7 +461,7 @@ export async function getUserNotifications(userId: string): Promise<UserNotifica
 export async function createNotification(notification: UserNotification): Promise<void> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await setDoc(doc(firestoreDb, "notifications", notification.id), notification);
+      await withTimeout(setDoc(doc(firestoreDb, "notifications", notification.id), notification));
       return;
     } catch (e) {
       console.error("[Database] Error creating notification in Firestore, falling back:", e);
@@ -467,7 +477,7 @@ export async function markNotificationRead(notificationId: string, userId: strin
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const ref = doc(firestoreDb, "notifications", notificationId);
-      await updateDoc(ref, { isRead: true });
+      await withTimeout(updateDoc(ref, { isRead: true }));
       return;
     } catch (e) {
       console.error("[Database] Error marking notification read in Firestore, falling back:", e);
@@ -486,7 +496,7 @@ export async function getTransaction(txId: string): Promise<TransactionRecord | 
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const txRef = doc(firestoreDb, "transactions", txId);
-      const txSnap = await getDoc(txRef);
+      const txSnap = await withTimeout(getDoc(txRef));
       if (txSnap.exists()) {
         return { id: txSnap.id, ...txSnap.data() } as TransactionRecord;
       }
@@ -503,8 +513,8 @@ export async function updateTransaction(txId: string, updates: Partial<Transacti
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const txRef = doc(firestoreDb, "transactions", txId);
-      await updateDoc(txRef, updates);
-      const txSnap = await getDoc(txRef);
+      await withTimeout(updateDoc(txRef, updates));
+      const txSnap = await withTimeout(getDoc(txRef));
       return { id: txSnap.id, ...txSnap.data() } as TransactionRecord;
     } catch (e) {
       console.error("[Database] Error updating transaction in Firestore:", e);
@@ -529,8 +539,8 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
         where("userId", "==", userId), 
         where("isRead", "==", false)
       );
-      const querySnap = await getDocs(q);
-      const promises = querySnap.docs.map(d => updateDoc(doc(firestoreDb, "notifications", d.id), { isRead: true }));
+      const querySnap = await withTimeout(getDocs(q));
+      const promises = querySnap.docs.map(d => withTimeout(updateDoc(doc(firestoreDb, "notifications", d.id), { isRead: true })));
       await Promise.all(promises);
       return;
     } catch (e) {
@@ -550,7 +560,7 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
 export async function deleteNotification(notificationId: string, userId: string): Promise<void> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await deleteDoc(doc(firestoreDb, "notifications", notificationId));
+      await withTimeout(deleteDoc(doc(firestoreDb, "notifications", notificationId)));
       return;
     } catch (e) {
       console.error("[Database] Error deleting notification in Firestore, falling back:", e);
@@ -565,7 +575,7 @@ export async function deleteNotification(notificationId: string, userId: string)
 export async function getAllUsers(): Promise<UserRecord[]> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      const querySnap = await getDocs(collection(firestoreDb, "users"));
+      const querySnap = await withTimeout(getDocs(collection(firestoreDb, "users")));
       return querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as UserRecord[];
     } catch (e) {
       console.error("[Database] Error getting all users from Firestore, falling back:", e);
@@ -578,7 +588,7 @@ export async function getAllUsers(): Promise<UserRecord[]> {
 export async function getAllOrdersGlobal(): Promise<OrderRecord[]> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      const querySnap = await getDocs(collection(firestoreDb, "orders"));
+      const querySnap = await withTimeout(getDocs(collection(firestoreDb, "orders")));
       const orders = querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as OrderRecord[];
       return orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
@@ -592,7 +602,7 @@ export async function getAllOrdersGlobal(): Promise<OrderRecord[]> {
 export async function getAllTransactionsGlobal(): Promise<TransactionRecord[]> {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      const querySnap = await getDocs(collection(firestoreDb, "transactions"));
+      const querySnap = await withTimeout(getDocs(collection(firestoreDb, "transactions")));
       const txs = querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as TransactionRecord[];
       return txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
