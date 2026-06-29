@@ -64,8 +64,8 @@ function AppContent() {
   React.useEffect(() => {
     if (currentUser) {
       setShowWebAuthModal(false);
-      // Automatically switch to CRM Admin section on desktop if logged in as admin/manager
-      if (currentUser.role === 'admin' || currentUser.role === 'manager') {
+      // Automatically switch to CRM Admin section on desktop if logged in as admin/manager on first login
+      if ((currentUser.role === 'admin' || currentUser.role === 'manager') && activeWebSection === 'home') {
         setActiveWebSection('admin');
       }
     } else {
@@ -529,24 +529,38 @@ function AppContent() {
 
               {currentUser ? (
                 <div className="flex items-center space-x-3 bg-stone-50 border border-coffee-100 px-3 py-1.5 rounded-xl">
-                  {/* Clickable Area to go to Membership section */}
-                  <div 
-                    onClick={() => setActiveWebSection('membership')}
-                    className="flex items-center space-x-3 cursor-pointer hover:opacity-85 transition-all"
-                  >
-                    {/* User Profile Summary */}
-                    <div className="text-right text-xs">
-                      <p className="font-bold text-coffee-950 leading-none">{currentUser.name}</p>
-                      <p className="text-[9px] text-amber-600 font-bold mt-0.5">
-                        {currentUser.tier.toUpperCase()} MEMBER
-                      </p>
+                  {currentUser.role === 'admin' || currentUser.role === 'manager' ? (
+                    /* Admin/Manager Profile Card - No wallet or points */
+                    <div 
+                      onClick={() => setActiveWebSection('admin')}
+                      className="flex items-center space-x-3 cursor-pointer hover:opacity-85 transition-all"
+                    >
+                      <div className="text-right text-xs">
+                        <p className="font-bold text-coffee-950 leading-none">{currentUser.name}</p>
+                        <p className="text-[9px] text-rose-600 font-black mt-0.5 tracking-wider uppercase">
+                          {currentUser.role === 'admin' ? 'SYSTEM ADMINISTRATOR' : 'STORE MANAGER'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="h-7 w-px bg-coffee-100"></div>
-                    <div className="text-left text-[10px] text-stone-500 font-medium">
-                      <p>Ví: <span className="font-bold text-coffee-900 font-mono">{currentUser.walletBalance.toLocaleString()}đ</span></p>
-                      <p>LEN: <span className="font-bold text-amber-500 font-mono">{currentUser.lenPoints.toLocaleString()}</span></p>
+                  ) : (
+                    /* Customer Profile Card - Show wallet & points */
+                    <div 
+                      onClick={() => setActiveWebSection('membership')}
+                      className="flex items-center space-x-3 cursor-pointer hover:opacity-85 transition-all"
+                    >
+                      <div className="text-right text-xs">
+                        <p className="font-bold text-coffee-950 leading-none">{currentUser.name}</p>
+                        <p className="text-[9px] text-amber-600 font-bold mt-0.5">
+                          {currentUser.tier.toUpperCase()} MEMBER
+                        </p>
+                      </div>
+                      <div className="h-7 w-px bg-coffee-100"></div>
+                      <div className="text-left text-[10px] text-stone-500 font-medium">
+                        <p>Ví: <span className="font-bold text-coffee-900 font-mono">{currentUser.walletBalance.toLocaleString()}đ</span></p>
+                        <p>LEN: <span className="font-bold text-amber-500 font-mono">{currentUser.lenPoints.toLocaleString()}</span></p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                   <div className="h-7 w-px bg-coffee-100"></div>
                   <button
                     onClick={() => logoutUser()}
