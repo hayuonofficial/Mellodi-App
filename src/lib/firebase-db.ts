@@ -195,7 +195,14 @@ function readLocalDb(): DatabaseSchema {
   try {
     if (fs.existsSync(localDbPath)) {
       const content = fs.readFileSync(localDbPath, "utf-8");
-      return JSON.parse(content);
+      const data = JSON.parse(content);
+      // Safeguard against missing or malformed database fields
+      if (!data.users) data.users = [];
+      if (!data.orders) data.orders = [];
+      if (!data.transactions) data.transactions = [];
+      if (!data.redeemedGifts) data.redeemedGifts = [];
+      if (!data.notifications) data.notifications = [];
+      return data;
     }
   } catch (err) {
     console.error("[Database] Failed to read local_db.json file:", err);
