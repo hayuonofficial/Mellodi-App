@@ -97,9 +97,13 @@ router.post("/register", async (req, res) => {
 
     const { password: _, ...safeUser } = newUser;
     res.json({ success: true, user: safeUser, token });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Register error:", error);
-    res.status(500).json({ error: "Lỗi hệ thống đăng ký tài khoản." });
+    res.status(500).json({ 
+      error: "Lỗi hệ thống đăng ký tài khoản.",
+      details: error.message || String(error),
+      stack: error.stack
+    });
   }
 });
 
@@ -135,9 +139,13 @@ router.post("/login", async (req, res) => {
 
     const { password: _, ...safeUser } = user;
     res.json({ success: true, user: safeUser, token });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Login error:", error);
-    res.status(500).json({ error: "Lỗi hệ thống đăng nhập." });
+    res.status(500).json({ 
+      error: "Lỗi hệ thống đăng nhập.",
+      details: error.message || String(error),
+      stack: error.stack
+    });
   }
 });
 
