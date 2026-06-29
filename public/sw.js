@@ -1,4 +1,4 @@
-const CACHE_NAME = 'mellodi-pwa-cache-v1';
+const CACHE_NAME = 'mellodi-pwa-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -38,11 +38,9 @@ self.addEventListener('fetch', (event) => {
   }
   
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
+    // Network-First Strategy: Try to fetch from network first
+    fetch(event.request)
+      .then((response) => {
         // Cache new static assets dynamically
         if (response && response.status === 200 && response.type === 'basic') {
           const responseToCache = response.clone();
@@ -51,9 +49,10 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return response;
-      }).catch(() => {
-        // Fail silently
-      });
-    })
+      })
+      .catch(() => {
+        // If network fails (offline), fall back to cache
+        return caches.match(event.request);
+      })
   );
 });
