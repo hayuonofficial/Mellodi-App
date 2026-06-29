@@ -89,6 +89,54 @@ router.post("/nfc/link", async (req, res) => {
   }
 });
 
+// API: Unlink / Revoke NFC Card from User (Admin action)
+router.post("/nfc/unlink", async (req, res) => {
+  const { userId, cardId } = req.body;
+
+  if (!userId || !cardId) {
+    return res.status(400).json({ error: "Thiếu thông tin người dùng hoặc ID thẻ NFC!" });
+  }
+
+  try {
+    const user = await getUser(userId);
+    if (!user) {
+      return res.status(404).json({ error: "Không tìm thấy thành viên!" });
+    }
+    if (!user.nfcCard || user.nfcCard.cardId !== cardId) {
+      return res.status(400).json({ error: "Thẻ NFC không khớp với tài khoản này!" });
+    }
+
+    // Remove nfcCard entirely
+    const updatedUser = await updateUser(userId, { nfcCard: undefined });
+
+    if (!updatedUser) {
+      return res.status(500).json({ error: "Không thể hủy liên kết thẻ NFC!" });
+    }
+
+    // Notify user
+    await addNotification(
+      userId,
+      {
+        vi: "Thẻ NFC đã bị thu hồi 🔒",
+        en: "NFC Card Revoked 🔒",
+        ko: "NFC 카드 회수됨 🔒"
+      },
+      {
+        vi: `Thẻ NFC (ID: ${cardId}) của bạn đã bị quản trị viên thu hồi. Vui lòng liên hệ quầy lễ tân để được hỗ trợ.`,
+        en: `Your NFC card (ID: ${cardId}) has been revoked by an administrator. Please contact the counter for support.`,
+        ko: `귀하의 NFC 카드(ID: ${cardId})가 관리자에 의해 회수되었습니다. 카운터에 문의하세요.`
+      },
+      "system"
+    );
+
+    const { password: _, ...safeUser } = updatedUser;
+    res.json({ success: true, user: safeUser });
+  } catch (error) {
+    console.error("NFC unlink error:", error);
+    res.status(500).json({ error: "Lỗi hệ thống khi thu hồi thẻ NFC." });
+  }
+});
+
 // API: Verify NFC Tap with Dynamic HMAC-SHA256 & Replay Protection (Section 5 of Project Plan)
 router.post("/nfc/verify", async (req, res) => {
   const { cardId, timestamp, signature } = req.body;

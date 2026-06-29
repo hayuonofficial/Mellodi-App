@@ -807,7 +807,10 @@ export const AdminDashboard: React.FC = () => {
                           try {
                             const response = await fetch(`${API_BASE_URL}/api/users/nfc/link`, {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
+                              headers: { 
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+                              },
                               body: JSON.stringify({
                                 userId: nfcSelectedCustomerId,
                                 cardId: nfcWriteCardId,
@@ -1390,68 +1393,123 @@ export const AdminDashboard: React.FC = () => {
                       {/* NFC Card Status Management */}
                       {customerDetail.user.nfcCard && (
                         <div className="pt-4 border-t border-stone-100 space-y-2">
-                          <label className="text-[10px] font-bold text-[#4E342E] uppercase tracking-wider block">Quản lý trạng thái Thẻ NFC</label>
-                          <div className="flex items-center justify-between bg-stone-50 p-3 rounded-2xl border border-stone-200/40">
-                            <div>
-                              <span className="text-[10px] text-stone-400 block font-mono">UID: {customerDetail.user.nfcCard.cardId}</span>
-                              <div className="flex items-center space-x-1.5 mt-1">
-                                <span className={`inline-block w-2 h-2 rounded-full ${customerDetail.user.nfcCard.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
-                                <span className="text-xs font-bold text-stone-700">
-                                  {customerDetail.user.nfcCard.status === 'active' ? 'Đang hoạt động (Active)' : 'Đã khóa tạm thời (Suspended)'}
-                                </span>
+                          <label className="text-[10px] font-bold text-[#4E342E] uppercase tracking-wider block">
+                            {language === 'vi' ? 'Quản lý Thẻ NFC' : language === 'ko' ? 'NFC 카드 관리' : 'NFC Card Management'}
+                          </label>
+                          <div className="bg-stone-50 p-3 rounded-2xl border border-stone-200/40 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div>
+                                <span className="text-[10px] text-stone-400 block font-mono">UID: {customerDetail.user.nfcCard.cardId}</span>
+                                <div className="flex items-center space-x-1.5 mt-1">
+                                  <span className={`inline-block w-2 h-2 rounded-full ${customerDetail.user.nfcCard.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
+                                  <span className="text-xs font-bold text-stone-700">
+                                    {customerDetail.user.nfcCard.status === 'active'
+                                      ? (language === 'vi' ? 'Đang hoạt động' : language === 'ko' ? '활성' : 'Active')
+                                      : (language === 'vi' ? 'Đã khóa tạm thời' : language === 'ko' ? '일시 정지됨' : 'Suspended')}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                            
-                            <button
-                              type="button"
-                              onClick={async () => {
-                                const newStatus = customerDetail.user.nfcCard!.status === 'active' ? 'suspended' : 'active';
-                                const confirmMsg = newStatus === 'suspended' 
-                                  ? 'Bạn có chắc chắn muốn KHÓA TẠM THỜI thẻ NFC này? Khách hàng sẽ không thể thanh toán bằng thẻ này cho đến khi được mở khóa lại.' 
-                                  : 'Bạn có chắc chắn muốn KÍCH HOẠT LẠI thẻ NFC này?';
-                                
-                                if (!confirm(confirmMsg)) return;
+                              
+                              {/* Lock / Unlock toggle */}
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  const newStatus = customerDetail.user.nfcCard!.status === 'active' ? 'suspended' : 'active';
+                                  const confirmMsg = newStatus === 'suspended'
+                                    ? (language === 'vi' ? 'Bạn có chắc chắn muốn KHÓA TẠM THỜI thẻ NFC này? Khách hàng sẽ không thể thanh toán bằng thẻ này cho đến khi được mở khóa lại.' : 'Are you sure you want to TEMPORARILY LOCK this NFC card?')
+                                    : (language === 'vi' ? 'Bạn có chắc chắn muốn KÍCH HOẠT LẠI thẻ NFC này?' : 'Are you sure you want to RE-ACTIVATE this NFC card?');
+                                  
+                                  if (!confirm(confirmMsg)) return;
 
-                                try {
-                                  const res = await fetch(`${API_BASE_URL}/api/admin/nfc/toggle-status`, {
-                                    method: 'POST',
-                                    headers: {
-                                      'Content-Type': 'application/json',
-                                      'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
-                                    },
-                                    body: JSON.stringify({
-                                      userId: customerDetail.user.id,
-                                      cardId: customerDetail.user.nfcCard!.cardId,
-                                      status: newStatus
-                                    })
-                                  });
-                                  const data = await res.json();
-                                  if (res.ok) {
-                                    alert(newStatus === 'suspended' ? 'Đã khóa thẻ NFC tạm thời thành công!' : 'Đã kích hoạt lại thẻ NFC thành công!');
-                                    // Refresh details
-                                    const detailRes = await fetch(`${API_BASE_URL}/api/admin/customers/${customerDetail.user.id}`, {
-                                      headers: { 'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}` }
+                                  try {
+                                    const res = await fetch(`${API_BASE_URL}/api/admin/nfc/toggle-status`, {
+                                      method: 'POST',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+                                      },
+                                      body: JSON.stringify({
+                                        userId: customerDetail.user.id,
+                                        cardId: customerDetail.user.nfcCard!.cardId,
+                                        status: newStatus
+                                      })
                                     });
-                                    if (detailRes.ok) {
-                                      const detailData = await detailRes.json();
-                                      setCustomerDetail(detailData);
+                                    const data = await res.json();
+                                    if (res.ok) {
+                                      alert(newStatus === 'suspended'
+                                        ? (language === 'vi' ? 'Đã khóa thẻ NFC tạm thời thành công!' : 'NFC card locked successfully!')
+                                        : (language === 'vi' ? 'Đã kích hoạt lại thẻ NFC thành công!' : 'NFC card activated successfully!'));
+                                      const detailRes = await fetch(`${API_BASE_URL}/api/admin/customers/${customerDetail.user.id}`, {
+                                        headers: { 'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}` }
+                                      });
+                                      if (detailRes.ok) setCustomerDetail(await detailRes.json());
+                                      fetchData();
+                                    } else {
+                                      alert(data.error);
                                     }
-                                    fetchData(); // Refresh CRM list
-                                  } else {
-                                    alert(data.error);
+                                  } catch (err) {
+                                    alert(language === 'vi' ? 'Lỗi kết nối máy chủ!' : 'Server connection error!');
                                   }
-                                } catch (err) {
-                                  alert('Lỗi kết nối máy chủ!');
-                                }
-                              }}
-                              className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
-                                customerDetail.user.nfcCard.status === 'active'
-                                  ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100'
-                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-100'
-                              }`}
-                            >
-                              {customerDetail.user.nfcCard.status === 'active' ? 'Khóa thẻ' : 'Mở khóa thẻ'}
-                            </button>
+                                }}
+                                className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+                                  customerDetail.user.nfcCard.status === 'active'
+                                    ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100'
+                                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-100'
+                                }`}
+                              >
+                                {customerDetail.user.nfcCard.status === 'active'
+                                  ? (language === 'vi' ? 'Khóa thẻ' : language === 'ko' ? '카드 잠금' : 'Lock Card')
+                                  : (language === 'vi' ? 'Mở khóa' : language === 'ko' ? '잠금 해제' : 'Unlock')}
+                              </button>
+                            </div>
+
+                            {/* Divider + Revoke button */}
+                            <div className="pt-2 border-t border-stone-200/60 flex items-center justify-between">
+                              <span className="text-[10px] text-stone-400 font-semibold">
+                                {language === 'vi' ? 'Thu hồi thẻ vĩnh viễn sẽ xóa toàn bộ liên kết.' : 'Revoking permanently removes the card link.'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  const confirmMsg = language === 'vi'
+                                    ? `Bạn có chắc chắn muốn THU HỒI VĨNH VIỄN thẻ NFC (UID: ${customerDetail.user.nfcCard!.cardId}) của khách hàng này? Hành động này không thể hoàn tác.`
+                                    : `Are you sure you want to PERMANENTLY REVOKE this NFC card? This cannot be undone.`;
+
+                                  if (!confirm(confirmMsg)) return;
+
+                                  try {
+                                    const res = await fetch(`${API_BASE_URL}/api/users/nfc/unlink`, {
+                                      method: 'POST',
+                                      headers: {
+                                        'Content-Type': 'application/json',
+                                        'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+                                      },
+                                      body: JSON.stringify({
+                                        userId: customerDetail.user.id,
+                                        cardId: customerDetail.user.nfcCard!.cardId
+                                      })
+                                    });
+                                    const data = await res.json();
+                                    if (res.ok) {
+                                      alert(language === 'vi' ? 'Đã thu hồi thẻ NFC thành công!' : 'NFC card revoked successfully!');
+                                      const detailRes = await fetch(`${API_BASE_URL}/api/admin/customers/${customerDetail.user.id}`, {
+                                        headers: { 'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}` }
+                                      });
+                                      if (detailRes.ok) setCustomerDetail(await detailRes.json());
+                                      fetchData();
+                                    } else {
+                                      alert(data.error);
+                                    }
+                                  } catch (err) {
+                                    alert(language === 'vi' ? 'Lỗi kết nối máy chủ!' : 'Server connection error!');
+                                  }
+                                }}
+                                className="px-3 py-1.5 bg-stone-900 hover:bg-red-900 text-white rounded-xl text-[10px] font-bold transition-all cursor-pointer flex items-center space-x-1"
+                              >
+                                <X className="w-3 h-3" />
+                                <span>{language === 'vi' ? 'Thu hồi thẻ' : language === 'ko' ? '카드 회수' : 'Revoke Card'}</span>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       )}
