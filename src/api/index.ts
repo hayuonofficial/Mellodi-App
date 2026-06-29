@@ -7,6 +7,7 @@ import notificationsRouter from "./notifications";
 import usersRouter from "./users";
 import webhookRouter from "./webhook";
 import adminRouter from "./admin";
+import educationRouter from "./education";
 
 const apiRouter = express.Router();
 
@@ -18,5 +19,6 @@ apiRouter.use("/notifications", notificationsRouter);
 apiRouter.use("/users", usersRouter);
 apiRouter.use("/payment", webhookRouter);
 apiRouter.use("/admin", adminRouter);
+apiRouter.use("/education", educationRouter);
 
 export default apiRouter;

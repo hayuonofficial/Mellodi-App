@@ -4,7 +4,8 @@ import { translations } from '../translations';
 import { 
   Coffee, MapPin, Star, BookOpen, 
   ArrowRight, Compass, Phone, Mail, Clock, Building, X,
-  Award, Wallet, CreditCard, Gift, History, Plus, Ticket, Check
+  Award, Wallet, CreditCard, Gift, History, Plus, Ticket, Check,
+  GraduationCap, Send, Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { AuthPortal } from './AuthPortal';
@@ -41,6 +42,12 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
   const [topUpAmount, setTopUpAmount] = useState<number>(50000);
   const [topUpStatus, setTopUpStatus] = useState<{ success?: boolean; message?: string } | null>(null);
   const [isTopUpLoading, setIsTopUpLoading] = useState(false);
+
+  // States for Study Abroad consultation
+  const [isStudyModalOpen, setIsStudyModalOpen] = useState(false);
+  const [studyForm, setStudyForm] = useState({ name: '', email: '', phone: '' });
+  const [isStudySubmitting, setIsStudySubmitting] = useState(false);
+  const [studySubmitStatus, setStudySubmitStatus] = useState<{ success?: boolean; message?: string } | null>(null);
 
   // Check screen size for responsive explosion radius
   useEffect(() => {
@@ -284,6 +291,35 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
     }, 1200);
   };
 
+  const handleStudySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsStudySubmitting(true);
+    setStudySubmitStatus(null);
+    try {
+      const apiBase = (import.meta as any).env?.VITE_API_URL || '';
+      const res = await fetch(`${apiBase}/api/education/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(studyForm)
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setStudySubmitStatus({ success: false, message: data.error || 'Đăng ký thất bại' });
+      } else {
+        setStudySubmitStatus({ success: true, message: data.message });
+        setStudyForm({ name: '', email: '', phone: '' });
+        setTimeout(() => {
+          setIsStudyModalOpen(false);
+          setStudySubmitStatus(null);
+        }, 3000);
+      }
+    } catch (err) {
+      setStudySubmitStatus({ success: false, message: 'Lỗi kết nối máy chủ.' });
+    } finally {
+      setIsStudySubmitting(false);
+    }
+  };
+
   const currentData = activeExplosionProduct ? explosionData[activeExplosionProduct] : null;
 
   // Render slides based on activeSection
@@ -427,6 +463,77 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                   </div>
                   <div className="pt-2 border-t border-stone-200/50 text-[10px] text-stone-400 leading-normal">
                     {translations[language]['landing.contact.hours.note']}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Study Abroad in Korea Section */}
+            <div className="relative bg-gradient-to-br from-[#FAF9F6] to-[#F5EBE6] rounded-3xl border border-coffee-200/60 p-8 sm:p-10 shadow-xl overflow-hidden text-left mt-8">
+              {/* Decorative Blur Backgrounds */}
+              <div className="absolute top-0 right-0 w-80 h-80 bg-red-500/5 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blue-500/5 rounded-full blur-2xl pointer-events-none"></div>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center relative z-10">
+                {/* Left: Premium 3D Image Card */}
+                <div className="lg:col-span-6 flex justify-center">
+                  <motion.div 
+                    whileHover={{ scale: 1.02, rotateY: -3, rotateX: 3 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                    className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl border-2 border-white/80 group"
+                  >
+                    <img 
+                      src="/korea_study_abroad.png" 
+                      alt="Study Abroad in South Korea" 
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    {/* Glassmorphism Badge */}
+                    <div className="absolute bottom-4 left-4 right-4 bg-stone-950/45 backdrop-blur-md border border-white/15 rounded-xl p-3 flex justify-between items-center text-white">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-xs">🇰🇷</div>
+                        <div>
+                          <span className="text-[9px] text-white/80 block font-semibold uppercase tracking-wider">Mellodi Global</span>
+                          <span className="text-xs font-bold block">Du học & Trải nghiệm</span>
+                        </div>
+                      </div>
+                      <div className="px-3 py-1 bg-amber-400 text-stone-900 text-[9px] font-bold rounded-full uppercase tracking-wider font-semibold">
+                        Đối Tác Uy Tín
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Right: Content & Call to Action */}
+                <div className="lg:col-span-6 space-y-6">
+                  <div className="space-y-3">
+                    <span className="inline-flex items-center space-x-1 bg-amber-100 border border-amber-200/60 px-3 py-1 rounded-full text-[9px] font-bold text-amber-800 uppercase tracking-widest">
+                      <Sparkles className="w-3 h-3 text-amber-600" />
+                      <span>Beyond Coffee, Beyond Possibilities</span>
+                    </span>
+                    <h2 className="font-serif text-2xl sm:text-3xl font-black text-coffee-950 leading-tight">
+                      Dự Án Du Học Hàn Quốc
+                    </h2>
+                    <p className="text-xs font-bold text-[#A37B45] italic">
+                      "Từ những trải nghiệm mỗi ngày đến những cơ hội cho tương lai."
+                    </p>
+                  </div>
+
+                  <p className="text-xs text-stone-600 leading-relaxed font-medium">
+                    Mellodi không chỉ mang đến những giai điệu tinh tế trên từng hạt cà phê chất lượng mà còn xây dựng một hệ sinh thái kết nối con người với những giá trị bền vững. Dự án Du học Hàn Quốc là một phần trong định hướng đó, được phát triển cùng các đối tác giáo dục uy tín nhằm cung cấp thông tin chính thống, lộ trình học tập minh bạch và cơ hội phát triển trong môi trường quốc tế.
+                  </p>
+
+                  <div className="border-l-2 border-amber-400 pl-4 py-1 italic text-[11px] text-stone-500 font-medium">
+                    "Chúng tôi tin rằng, mỗi hành trình lớn đều bắt đầu từ một cơ hội đúng đắn."
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      onClick={() => setIsStudyModalOpen(true)}
+                      className="group inline-flex items-center space-x-3 px-6 py-3 bg-[#4E342E] hover:bg-[#3E2723] text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-98 cursor-pointer"
+                    >
+                      <span>Tìm hiểu thêm</span>
+                      <span className="transition-transform duration-300 group-hover:translate-x-2">{"----->"}</span>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -1115,6 +1222,110 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                 <span>{translations[language]['landing.hero.cta.order']}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Study Abroad Consultation Modal */}
+      <AnimatePresence>
+        {isStudyModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsStudyModalOpen(false)}
+              className="absolute inset-0 bg-stone-900/60 backdrop-blur-xs"
+            ></motion.div>
+
+            {/* Modal Body */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border border-stone-100 max-w-md w-full overflow-hidden text-left z-10"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setIsStudyModalOpen(false)}
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-500 flex items-center justify-center transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              <div className="space-y-5">
+                <div className="space-y-1">
+                  <span className="text-[9px] font-bold text-[#A37B45] uppercase tracking-wider flex items-center space-x-1">
+                    <GraduationCap className="w-3.5 h-3.5" />
+                    <span>Mellodi Education & J2H2 Global</span>
+                  </span>
+                  <h3 className="font-serif text-lg font-bold text-coffee-950">Đăng Ký Tư Vấn Du Học</h3>
+                  <p className="text-[11px] text-stone-500 leading-normal">
+                    Để lại thông tin dưới đây, đội ngũ chuyên viên của Mellodi & J2H2 Global sẽ liên hệ hỗ trợ lộ trình chi tiết cho bạn.
+                  </p>
+                </div>
+
+                <form onSubmit={handleStudySubmit} className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Họ và tên</label>
+                    <input
+                      type="text"
+                      required
+                      value={studyForm.name}
+                      onChange={(e) => setStudyForm({ ...studyForm, name: e.target.value })}
+                      placeholder="Nguyễn Văn A"
+                      className="w-full px-4 py-3 bg-[#FAF9F6] border border-coffee-100 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-amber-400 transition-colors text-stone-900"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Gmail</label>
+                    <input
+                      type="email"
+                      required
+                      value={studyForm.email}
+                      onChange={(e) => setStudyForm({ ...studyForm, email: e.target.value })}
+                      placeholder="example@gmail.com"
+                      className="w-full px-4 py-3 bg-[#FAF9F6] border border-coffee-100 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-amber-400 transition-colors text-stone-900"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Số điện thoại</label>
+                    <input
+                      type="tel"
+                      required
+                      value={studyForm.phone}
+                      onChange={(e) => setStudyForm({ ...studyForm, phone: e.target.value })}
+                      placeholder="090xxxxxxx"
+                      className="w-full px-4 py-3 bg-[#FAF9F6] border border-coffee-100 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-amber-400 transition-colors text-stone-900"
+                    />
+                  </div>
+
+                  {studySubmitStatus && (
+                    <div className={`p-3 rounded-xl text-xs font-semibold ${studySubmitStatus.success ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
+                      {studySubmitStatus.message}
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={isStudySubmitting}
+                    className="w-full py-3 bg-amber-450 hover:bg-amber-500 disabled:bg-stone-200 disabled:text-stone-400 text-[#3E2723] text-xs font-bold rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center space-x-2 cursor-pointer"
+                  >
+                    {isStudySubmitting ? (
+                      <span>Đang gửi thông tin...</span>
+                    ) : (
+                      <>
+                        <span>Nhận Tư Vấn Miễn Phí</span>
+                        <Send className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </div>
             </motion.div>
           </div>
         )}

@@ -143,12 +143,22 @@ export interface RedeemedGift {
   pickupBranch?: string;
 }
 
+export interface EducationConsultation {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  createdAt: string;
+  status: "pending" | "contacted" | "cancelled";
+}
+
 export interface DatabaseSchema {
   users: UserRecord[];
   orders: OrderRecord[];
   transactions: TransactionRecord[];
   redeemedGifts?: RedeemedGift[];
   notifications?: UserNotification[];
+  educationConsultations?: EducationConsultation[];
 }
 
 const localDbPath = path.join(process.cwd(), "local_db.json");
@@ -170,6 +180,7 @@ const DEFAULT_LOCAL_DB: DatabaseSchema = {
   orders: [],
   transactions: [],
   redeemedGifts: [],
+  educationConsultations: [],
   notifications: [
     {
       id: "notif-welcome",
@@ -633,3 +644,34 @@ export async function getAllTransactionsGlobal(): Promise<TransactionRecord[]> {
   const db = readLocalDb();
   return db.transactions;
 }
+
+// --- EDUCATION / STUDY ABROAD OPERATIONS ---
+export async function createEducationConsultation(consultation: EducationConsultation): Promise<void> {
+  if (isFirebaseAvailable && firestoreDb) {
+    try {
+      await withTimeout(setDoc(doc(firestoreDb, "educationConsultations", consultation.id), consultation));
+      return;
+    } catch (e) {
+      console.error("[Database] Error creating education consultation in Firestore, falling back:", e);
+    }
+  }
+  const db = readLocalDb();
+  if (!db.educationConsultations) db.educationConsultations = [];
+  db.educationConsultations.push(consultation);
+  writeLocalDb(db);
+}
+
+export async function getAllEducationConsultationsGlobal(): Promise<EducationConsultation[]> {
+  if (isFirebaseAvailable && firestoreDb) {
+    try {
+      const querySnap = await withTimeout(getDocs(collection(firestoreDb, "educationConsultations")));
+      const consultations = querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as EducationConsultation[];
+      return consultations.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } catch (e) {
+      console.error("[Database] Error getting all education consultations from Firestore, falling back:", e);
+    }
+  }
+  const db = readLocalDb();
+  return db.educationConsultations || [];
+}
+
