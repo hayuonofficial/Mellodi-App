@@ -24,8 +24,8 @@ export const getBotResponse = (input: string, lang: 'vi' | 'en' | 'ko'): string 
     if (query.includes('khuyến mãi') || query.includes('voucher') || query.includes('ưu đãi') || query.includes('giảm giá') || query.includes('mã')) {
       return 'Hiện tại Mellodi đang chạy các ưu đãi độc quyền sau:\n- Tặng ngay Voucher giảm 30% cho thành viên mới đăng ký.\n- Tích lũy 10% điểm thưởng LEN trên mọi hóa đơn.\n- Tặng voucher đồ uống miễn phí vào ngày sinh nhật cho thành viên hạng Green & Gold VIP. Hãy đăng ký tài khoản thành viên ngay hôm nay để nhận quà nhé!';
     }
-    if (query.includes('ereh') || query.includes('công ty') || query.includes('chủ quản') || query.includes('ereh global')) {
-      return 'Dạ, Mellodi là thương hiệu cà phê đặc sản trực thuộc sở hữu của Công Ty Ereh Global. Chúng tôi ứng dụng công nghệ để nâng tầm nông sản Việt và tối ưu hóa dịch vụ khách hàng.';
+    if (query.includes('j2h2') || query.includes('công ty') || query.includes('chủ quản') || query.includes('j2h2 global')) {
+      return 'Dạ, Mellodi là thương hiệu cà phê đặc sản trực thuộc sở hữu của Công Ty J2H2 Global. Chúng tôi ứng dụng công nghệ để nâng tầm nông sản Việt và tối ưu hóa dịch vụ khách hàng.';
     }
     if (query.includes('chào') || query.includes('hello') || query.includes('hi') || query.includes('hey') || query.includes('ad')) {
       return 'Mellodi xin chào! Tôi là Trợ lý ảo AI phục vụ 24/7 của Mellodi. Tôi có thể giúp gì cho bạn? Bạn có thể chọn các câu hỏi nhanh bên dưới hoặc hỏi tôi bất cứ thông tin gì về quán nhé!';
@@ -49,8 +49,8 @@ export const getBotResponse = (input: string, lang: 'vi' | 'en' | 'ko'): string 
     if (query.includes('promo') || query.includes('voucher') || query.includes('offer') || query.includes('discount')) {
       return 'Current Mellodi promotions include:\n- Get a 30% discount welcome voucher upon registration.\n- Accumulate 10% LEN points on all purchases.\n- Free birthday drink voucher for Green & Gold VIP members. Register now to claim!';
     }
-    if (query.includes('ereh') || query.includes('company') || query.includes('ereh global')) {
-      return 'Mellodi is proudly owned and operated by Ereh Global Joint Stock Company, bringing technological innovation to Vietnam\'s specialty coffee sector.';
+    if (query.includes('j2h2') || query.includes('company') || query.includes('j2h2 global')) {
+      return 'Mellodi is proudly owned and operated by J2H2 Global Joint Stock Company, bringing technological innovation to Vietnam\'s specialty coffee sector.';
     }
     if (query.includes('hello') || query.includes('hi') || query.includes('hey') || query.includes('greet')) {
       return 'Hello! I am Mellodi\'s AI Virtual Assistant. How can I help you today? You can ask me about our menu, store address, membership points, or active promotions!';
@@ -74,8 +74,8 @@ export const getBotResponse = (input: string, lang: 'vi' | 'en' | 'ko'): string 
   if (query.includes('쿠폰') || query.includes('할인') || query.includes('혜택') || query.includes('이벤트')) {
     return '현재 진행 중인 멜로디 프로모션입니다:\n- 신규 회원 가입 시 30% 웰컴 할인 쿠폰 지급.\n- 모든 주문 금액의 10% LEN 포인트 즉시 적립.\n- Green 및 Gold VIP 회원 대상 무료 생일 음료 쿠폰 증정. 지금 회원가입하고 혜택을 받아보세요!';
   }
-  if (query.includes('에레') || query.includes('회사') || query.includes('ereh global')) {
-    return '멜로디는 Ereh Global 주식회사가 소유하고 운영하는 프리미엄 스페셜티 커피 브랜드입니다.';
+  if (query.includes('j2h2') || query.includes('회사') || query.includes('j2h2 global')) {
+    return '멜로디는 J2H2 Global 주식회사가 소유하고 운영하는 프리미엄 스페셜티 커피 브랜드입니다.';
   }
   if (query.includes('안녕') || query.includes('헬로') || query.includes('하이')) {
     return '안녕하세요! 멜로디의 24/7 AI 고객지원 가상 비서입니다. 무엇을 도와드릴까요? 메뉴, 매장 위치, 멤버십 혜택, 이벤트 등에 대해 물어보세요!';
