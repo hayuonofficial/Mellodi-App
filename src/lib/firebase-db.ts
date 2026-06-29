@@ -168,6 +168,7 @@ export interface DatabaseSchema {
   redeemedGifts?: RedeemedGift[];
   notifications?: UserNotification[];
   educationConsultations?: EducationConsultation[];
+  products?: ProductRecord[];
 }
 
 const localDbPath = path.join(process.cwd(), "local_db.json");
@@ -683,5 +684,115 @@ export async function getAllEducationConsultationsGlobal(): Promise<EducationCon
   }
   const db = readLocalDb();
   return db.educationConsultations || [];
+}
+
+// --- PRODUCT OPERATIONS ---
+export interface ProductRecord {
+  id: string;
+  category: string;
+  name: Record<string, string>;
+  description: Record<string, string>;
+  priceVND: number;
+  priceKRW: number;
+  priceUSD: number;
+  image: string;
+  popular?: boolean;
+}
+
+export async function getAllProductsGlobal(): Promise<ProductRecord[]> {
+  if (isFirebaseAvailable && firestoreDb) {
+    try {
+      const q = query(collection(firestoreDb, "products"));
+      const querySnap = await withTimeout(getDocs(q));
+      if (querySnap.size > 0) {
+        return querySnap.docs.map(doc => ({ id: doc.id, ...doc.data() })) as ProductRecord[];
+      }
+    } catch (e) {
+      console.error("[Database] Error getting products from Firestore, falling back:", e);
+    }
+  }
+  const db = readLocalDb();
+  if (!db.products || db.products.length === 0) {
+    const { products: defaultProducts } = await import("../data/products.js");
+    db.products = defaultProducts;
+    writeLocalDb(db);
+  }
+  return db.products || [];
+}
+
+export async function getProduct(productId: string): Promise<ProductRecord | null> {
+  if (isFirebaseAvailable && firestoreDb) {
+    try {
+      const productRef = doc(firestoreDb, "products", productId);
+      const productSnap = await withTimeout(getDoc(productRef));
+      if (productSnap.exists()) {
+        return { id: productSnap.id, ...productSnap.data() } as ProductRecord;
+      }
+      return null;
+    } catch (e) {
+      console.error("[Database] Error getting product from Firestore, falling back:", e);
+    }
+  }
+  const db = readLocalDb();
+  return (db.products || []).find(p => p.id === productId) || null;
+}
+
+export async function createProduct(product: ProductRecord): Promise<ProductRecord> {
+  if (isFirebaseAvailable && firestoreDb) {
+    try {
+      await withTimeout(setDoc(doc(firestoreDb, "products", product.id), product));
+      return product;
+    } catch (e) {
+      console.error("[Database] Error creating product in Firestore, falling back:", e);
+    }
+  }
+  const db = readLocalDb();
+  if (!db.products) db.products = [];
+  db.products.push(product);
+  writeLocalDb(db);
+  return product;
+}
+
+export async function updateProduct(productId: string, updates: Partial<ProductRecord>): Promise<ProductRecord | null> {
+  if (isFirebaseAvailable && firestoreDb) {
+    try {
+      const productRef = doc(firestoreDb, "products", productId);
+      await withTimeout(updateDoc(productRef, updates));
+      const productSnap = await withTimeout(getDoc(productRef));
+      return { id: productSnap.id, ...productSnap.data() } as ProductRecord;
+    } catch (e) {
+      console.error("[Database] Error updating product in Firestore, falling back:", e);
+    }
+  }
+  const db = readLocalDb();
+  if (!db.products) db.products = [];
+  const index = db.products.findIndex(p => p.id === productId);
+  if (index !== -1) {
+    db.products[index] = { ...db.products[index], ...updates };
+    writeLocalDb(db);
+    return db.products[index];
+  }
+  return null;
+}
+
+export async function deleteProduct(productId: string): Promise<boolean> {
+  if (isFirebaseAvailable && firestoreDb) {
+    try {
+      const productRef = doc(firestoreDb, "products", productId);
+      await withTimeout(deleteDoc(productRef));
+      return true;
+    } catch (e) {
+      console.error("[Database] Error deleting product from Firestore, falling back:", e);
+    }
+  }
+  const db = readLocalDb();
+  if (!db.products) db.products = [];
+  const index = db.products.findIndex(p => p.id === productId);
+  if (index !== -1) {
+    db.products.splice(index, 1);
+    writeLocalDb(db);
+    return true;
+  }
+  return false;
 }
 

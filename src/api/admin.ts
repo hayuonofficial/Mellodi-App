@@ -9,6 +9,9 @@ import {
   getAllEducationConsultationsGlobal,
   getUser,
   updateUser,
+  createProduct,
+  updateProduct,
+  deleteProduct,
   UserRecord,
   OrderRecord,
   TransactionRecord
@@ -398,6 +401,68 @@ router.post("/change-role", async (req, res) => {
   } catch (error) {
     console.error("Change role error:", error);
     res.status(500).json({ error: "Lỗi hệ thống thay đổi vai trò." });
+  }
+});
+
+// API: Admin - Add Product
+router.post("/products", async (req, res) => {
+  const { id, category, name, description, priceVND, priceKRW, priceUSD, image, popular } = req.body;
+
+  if (!id || !category || !name || !priceVND) {
+    return res.status(400).json({ error: "Thiếu thông tin sản phẩm bắt buộc!" });
+  }
+
+  try {
+    const newProduct = {
+      id,
+      category,
+      name,
+      description: description || { vi: "", en: "", ko: "" },
+      priceVND: Number(priceVND),
+      priceKRW: Number(priceKRW || 0),
+      priceUSD: Number(priceUSD || 0),
+      image: image || "☕",
+      popular: !!popular
+    };
+
+    const created = await createProduct(newProduct);
+    res.json({ success: true, product: created });
+  } catch (error) {
+    console.error("Create product error:", error);
+    res.status(500).json({ error: "Lỗi hệ thống khi thêm món mới." });
+  }
+});
+
+// API: Admin - Update Product
+router.put("/products/:id", async (req, res) => {
+  const productId = req.params.id;
+  const updates = req.body;
+
+  try {
+    const updated = await updateProduct(productId, updates);
+    if (!updated) {
+      return res.status(404).json({ error: "Không tìm thấy sản phẩm cần cập nhật!" });
+    }
+    res.json({ success: true, product: updated });
+  } catch (error) {
+    console.error("Update product error:", error);
+    res.status(500).json({ error: "Lỗi hệ thống khi cập nhật thông tin món." });
+  }
+});
+
+// API: Admin - Delete Product
+router.delete("/products/:id", async (req, res) => {
+  const productId = req.params.id;
+
+  try {
+    const deleted = await deleteProduct(productId);
+    if (!deleted) {
+      return res.status(404).json({ error: "Không tìm thấy sản phẩm cần xóa!" });
+    }
+    res.json({ success: true, message: "Đã xóa sản phẩm thành công khỏi thực đơn!" });
+  } catch (error) {
+    console.error("Delete product error:", error);
+    res.status(500).json({ error: "Lỗi hệ thống khi xóa món." });
   }
 });
 

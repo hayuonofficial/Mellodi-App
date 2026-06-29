@@ -4,7 +4,7 @@ import {
   Users, TrendingUp, ShoppingBag, Award, Search, Filter, 
   ChevronRight, ArrowLeft, RefreshCw, BarChart2, Download, 
   DollarSign, Calendar, Star, Coffee, Sparkles, AlertCircle, CheckCircle,
-  GraduationCap, CreditCard, Plus, Wifi, Smartphone
+  GraduationCap, CreditCard, Plus, Wifi, Smartphone, Tag, ShieldCheck, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -121,6 +121,27 @@ export const AdminDashboard: React.FC = () => {
   const [posActionMsg, setPosActionMsg] = useState<string>('');
   const [nfcWritePin, setNfcWritePin] = useState<string>('123456');
 
+  // Menu Management States
+  const [adminProducts, setAdminProducts] = useState<any[]>([]);
+  const [adminProductsLoading, setAdminProductsLoading] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any | null>(null);
+  const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [newProductForm, setNewProductForm] = useState({
+    id: '',
+    category: 'espresso',
+    nameVi: '',
+    nameEn: '',
+    nameKo: '',
+    descVi: '',
+    descEn: '',
+    descKo: '',
+    priceVND: 50000,
+    priceKRW: 3000,
+    priceUSD: 2.0,
+    image: '☕',
+    popular: false
+  });
+
   // Data states
   const [customers, setCustomers] = useState<CustomerSummary[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
@@ -198,6 +219,27 @@ export const AdminDashboard: React.FC = () => {
     };
     fetchDetail();
   }, [selectedCustomerId]);
+
+  const fetchAdminProducts = async () => {
+    try {
+      setAdminProductsLoading(true);
+      const res = await fetch(`${API_BASE_URL}/products`);
+      if (res.ok) {
+        const data = await res.json();
+        setAdminProducts(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch admin products:", err);
+    } finally {
+      setAdminProductsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSubTab === 'menu') {
+      fetchAdminProducts();
+    }
+  }, [activeSubTab]);
 
   // Seed 50+ mock customers
   const handleSeedData = async () => {
@@ -294,6 +336,15 @@ export const AdminDashboard: React.FC = () => {
           >
             <CreditCard className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-blue-600" />
             {language === 'vi' ? 'Trạm Thẻ NFC' : 'NFC Station'}
+          </button>
+          <button
+            onClick={() => { setActiveSubTab('menu'); setSelectedCustomerId(null); }}
+            className={`flex-1 sm:flex-none px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
+              activeSubTab === 'menu' ? 'bg-white text-coffee-950 shadow-xs' : 'text-stone-500 hover:text-stone-900'
+            }`}
+          >
+            <Coffee className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-rose-600" />
+            {language === 'vi' ? 'Thực Đơn & Khuyến Mãi' : 'Menu & Promos'}
           </button>
         </div>
       </div>
@@ -1051,6 +1102,152 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               </div>
             )}
+
+            {/* TAB 5: MENU & PROMOTION MANAGEMENT */}
+            {activeSubTab === 'menu' && (
+              <div className="space-y-6">
+                
+                {/* MENU MANAGEMENT SECTION */}
+                <div className="bg-white rounded-3xl border border-coffee-100 shadow-xs p-6 space-y-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-stone-100 pb-4">
+                    <div>
+                      <h3 className="font-serif text-lg font-bold text-coffee-950 flex items-center space-x-2">
+                        <Coffee className="w-5 h-5 text-rose-600" />
+                        <span>Quản Lý Thực Đơn (Menu Editor)</span>
+                      </h3>
+                      <p className="text-[10px] text-stone-400 mt-0.5">Thay đổi giá cả, thêm/bớt món trực tiếp trên hệ thống đặt hàng.</p>
+                    </div>
+                    
+                    <button
+                      onClick={() => {
+                        const randomId = 'prod-' + Math.random().toString(36).substring(2, 7);
+                        setNewProductForm({
+                          id: randomId,
+                          category: 'espresso',
+                          nameVi: '',
+                          nameEn: '',
+                          nameKo: '',
+                          descVi: '',
+                          descEn: '',
+                          descKo: '',
+                          priceVND: 50000,
+                          priceKRW: 3000,
+                          priceUSD: 2.0,
+                          image: '☕',
+                          popular: false
+                        });
+                        setShowAddProductModal(true);
+                      }}
+                      className="px-4 py-2 bg-[#2D5A47] hover:bg-[#1E3F31] text-white text-xs font-bold rounded-xl flex items-center space-x-1.5 transition-all cursor-pointer"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Thêm món mới</span>
+                    </button>
+                  </div>
+
+                  {adminProductsLoading ? (
+                    <div className="py-12 flex justify-center">
+                      <div className="w-8 h-8 border-3 border-rose-600 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-stone-100 text-[10px] font-bold text-stone-400 uppercase tracking-wider">
+                            <th className="py-3 px-2">Hình</th>
+                            <th className="py-3 px-2">Tên Món (VI / EN)</th>
+                            <th className="py-3 px-2">Danh mục</th>
+                            <th className="py-3 px-2 text-right">Giá VND</th>
+                            <th className="py-3 px-2 text-right">Giá USD</th>
+                            <th className="py-3 px-2 text-center">Bán chạy</th>
+                            <th className="py-3 px-2 text-right">Thao tác</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-stone-100 text-xs font-semibold text-stone-605">
+                          {adminProducts.map((prod) => (
+                            <tr key={prod.id} className="hover:bg-stone-50/50 transition-colors">
+                              <td className="py-3 px-2 text-xl">{prod.image || '☕'}</td>
+                              <td className="py-3 px-2">
+                                <div className="font-serif font-bold text-coffee-950">{prod.name.vi}</div>
+                                <div className="text-[10px] text-stone-400 font-mono">{prod.name.en}</div>
+                              </td>
+                              <td className="py-3 px-2 uppercase text-[10px] font-mono text-stone-500">{prod.category}</td>
+                              <td className="py-3 px-2 text-right font-mono text-emerald-800">{prod.priceVND.toLocaleString()}đ</td>
+                              <td className="py-3 px-2 text-right font-mono text-stone-500">${prod.priceUSD.toFixed(2)}</td>
+                              <td className="py-3 px-2 text-center">
+                                {prod.popular ? (
+                                  <span className="inline-block w-2 h-2 rounded-full bg-amber-500" title="Bán chạy"></span>
+                                ) : (
+                                  <span className="inline-block w-2 h-2 rounded-full bg-stone-200"></span>
+                                )}
+                              </td>
+                              <td className="py-3 px-2 text-right space-x-1">
+                                <button
+                                  onClick={() => {
+                                    setEditingProduct(prod);
+                                  }}
+                                  className="px-2.5 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+                                >
+                                  Sửa
+                                </button>
+                                <button
+                                  onClick={async () => {
+                                    if (confirm(`Bạn có chắc muốn xóa món "${prod.name.vi}" khỏi thực đơn không?`)) {
+                                      try {
+                                        const res = await fetch(`${API_BASE_URL}/api/admin/products/${prod.id}`, {
+                                          method: 'DELETE',
+                                          headers: { 'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}` }
+                                        });
+                                        if (res.ok) {
+                                          alert("Đã xóa món thành công!");
+                                          fetchAdminProducts();
+                                        } else {
+                                          const data = await res.json();
+                                          alert(data.error);
+                                        }
+                                      } catch (err) {
+                                        alert("Lỗi kết nối máy chủ!");
+                                      }
+                                    }
+                                  }}
+                                  className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-[10px] font-bold transition-all cursor-pointer"
+                                >
+                                  Xóa
+                                </button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+
+                {/* PROMOTION / PROGRAM MANAGEMENT SECTION */}
+                <div className="bg-white rounded-3xl border border-coffee-100 shadow-xs p-6 space-y-4 text-left">
+                  <h3 className="font-serif text-sm font-bold text-coffee-950 flex items-center space-x-2">
+                    <Tag className="w-4.5 h-4.5 text-[#2D5A47]" />
+                    <span>Quản Lý Chương Trình Khuyến Mãi (Promotions)</span>
+                  </h3>
+                  <p className="text-[11px] text-stone-550 leading-relaxed">
+                    Cấu hình và cập nhật các mã giảm giá đặc quyền tại quán Mellodi. Khách hàng sẽ thấy các ưu đãi này trực tiếp trong ví voucher của họ.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                    <div className="p-4 border border-stone-200 rounded-2xl bg-stone-50/40">
+                      <h4 className="text-xs font-bold text-coffee-950 flex items-center"><Sparkles className="w-3.5 h-3.5 text-amber-500 mr-1" /> Voucher Bạn Mới (20%)</h4>
+                      <p className="text-[10px] text-stone-450 mt-1">Voucher giảm 20% tự động phát hành cho tất cả khách hàng khi đăng ký tài khoản thành viên lần đầu.</p>
+                      <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-800 text-[9px] font-bold rounded-lg uppercase">Đang hoạt động</span>
+                    </div>
+                    <div className="p-4 border border-stone-200 rounded-2xl bg-stone-50/40">
+                      <h4 className="text-xs font-bold text-coffee-950 flex items-center"><ShieldCheck className="w-3.5 h-3.5 text-blue-500 mr-1" /> Điểm Tích Lũy 10%</h4>
+                      <p className="text-[10px] text-stone-450 mt-1">Hoàn trả 10% giá trị hóa đơn dưới dạng điểm LEN cho mọi giao dịch thanh toán bằng thẻ NFC.</p>
+                      <span className="inline-block mt-2 px-2 py-0.5 bg-emerald-50 border border-emerald-100 text-emerald-800 text-[9px] font-bold rounded-lg uppercase">Đang hoạt động</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* RIGHT SIDE: CUSTOMER 360° PROFILE */}
@@ -1260,6 +1457,360 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* ADD PRODUCT MODAL */}
+      <AnimatePresence>
+        {showAddProductModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full relative shadow-2xl border border-stone-250 max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setShowAddProductModal(false)}
+                className="absolute top-4 right-4 p-1.5 hover:bg-stone-100 text-stone-450 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="font-serif text-xl font-bold text-coffee-950 mb-4 text-left">Thêm Món Mới Vào Thực Đơn</h3>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    const res = await fetch(`${API_BASE_URL}/api/admin/products`, {
+                      method: 'POST',
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+                      },
+                      body: JSON.stringify({
+                        id: newProductForm.id,
+                        category: newProductForm.category,
+                        name: {
+                          vi: newProductForm.nameVi,
+                          en: newProductForm.nameEn,
+                          ko: newProductForm.nameKo || newProductForm.nameEn
+                        },
+                        description: {
+                          vi: newProductForm.descVi,
+                          en: newProductForm.descEn,
+                          ko: newProductForm.descKo || newProductForm.descEn
+                        },
+                        priceVND: Number(newProductForm.priceVND),
+                        priceKRW: Number(newProductForm.priceKRW),
+                        priceUSD: Number(newProductForm.priceUSD),
+                        image: newProductForm.image,
+                        popular: newProductForm.popular
+                      })
+                    });
+                    if (res.ok) {
+                      alert("Thêm món mới thành công!");
+                      setShowAddProductModal(false);
+                      fetchAdminProducts();
+                    } else {
+                      const data = await res.json();
+                      alert(data.error);
+                    }
+                  } catch (err) {
+                    alert("Lỗi kết nối máy chủ!");
+                  }
+                }}
+                className="space-y-4 text-left"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">MÃ SẢN PHẨM *</label>
+                    <input
+                      type="text"
+                      required
+                      value={newProductForm.id}
+                      onChange={(e) => setNewProductForm({...newProductForm, id: e.target.value})}
+                      className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-mono font-bold text-stone-900"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">DANH MỤC *</label>
+                    <select
+                      value={newProductForm.category}
+                      onChange={(e) => setNewProductForm({...newProductForm, category: e.target.value})}
+                      className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-bold text-stone-900"
+                    >
+                      <option value="espresso">Cà phê Ý (Espresso)</option>
+                      <option value="brewed">Cà phê Phin (Brewed)</option>
+                      <option value="coldbrew">Cà phê Lạnh (Cold Brew)</option>
+                      <option value="tea">Trà & Trái cây (Tea)</option>
+                      <option value="pastry">Bánh & Tráng miệng (Pastry)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-stone-500 block">TÊN MÓN (TIẾNG VIỆT) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProductForm.nameVi}
+                    onChange={(e) => setNewProductForm({...newProductForm, nameVi: e.target.value})}
+                    className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-stone-500 block">TÊN MÓN (TIẾNG ANH) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={newProductForm.nameEn}
+                    onChange={(e) => setNewProductForm({...newProductForm, nameEn: e.target.value})}
+                    className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">GIÁ VND *</label>
+                    <input
+                      type="number"
+                      required
+                      value={newProductForm.priceVND}
+                      onChange={(e) => setNewProductForm({...newProductForm, priceVND: Number(e.target.value)})}
+                      className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-bold font-mono text-stone-900"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">GIÁ USD *</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      required
+                      value={newProductForm.priceUSD}
+                      onChange={(e) => setNewProductForm({...newProductForm, priceUSD: Number(e.target.value)})}
+                      className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-bold font-mono text-stone-900"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">BIỂU TƯỢNG (EMOJI) *</label>
+                    <input
+                      type="text"
+                      required
+                      value={newProductForm.image}
+                      onChange={(e) => setNewProductForm({...newProductForm, image: e.target.value})}
+                      className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-bold text-center text-stone-900"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-stone-500 block">MÔ TẢ (TIẾNG VIỆT)</label>
+                  <textarea
+                    value={newProductForm.descVi}
+                    onChange={(e) => setNewProductForm({...newProductForm, descVi: e.target.value})}
+                    className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-medium h-16 text-stone-900"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="new_popular"
+                    checked={newProductForm.popular}
+                    onChange={(e) => setNewProductForm({...newProductForm, popular: e.target.checked})}
+                    className="rounded-sm text-[#2D5A47] focus:ring-[#2D5A47]"
+                  />
+                  <label htmlFor="new_popular" className="text-xs font-bold text-stone-700 cursor-pointer select-none">Món bán chạy nổi bật (Popular)</label>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-[#2D5A47] hover:bg-[#1E3F31] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                >
+                  Xác nhận thêm món
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* EDIT PRODUCT MODAL */}
+      <AnimatePresence>
+        {editingProduct && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full relative shadow-2xl border border-stone-250 max-h-[90vh] overflow-y-auto"
+            >
+              <button
+                onClick={() => setEditingProduct(null)}
+                className="absolute top-4 right-4 p-1.5 hover:bg-stone-100 text-stone-450 rounded-full transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <h3 className="font-serif text-xl font-bold text-coffee-950 mb-4 text-left">Chỉnh Sửa Thông Tin Món</h3>
+
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  try {
+                    const res = await fetch(`${API_BASE_URL}/api/admin/products/${editingProduct.id}`, {
+                      method: 'PUT',
+                      headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+                      },
+                      body: JSON.stringify({
+                        category: editingProduct.category,
+                        name: editingProduct.name,
+                        description: editingProduct.description,
+                        priceVND: Number(editingProduct.priceVND),
+                        priceKRW: Number(editingProduct.priceKRW),
+                        priceUSD: Number(editingProduct.priceUSD),
+                        image: editingProduct.image,
+                        popular: editingProduct.popular
+                      })
+                    });
+                    if (res.ok) {
+                      alert("Cập nhật món thành công!");
+                      setEditingProduct(null);
+                      fetchAdminProducts();
+                    } else {
+                      const data = await res.json();
+                      alert(data.error);
+                    }
+                  } catch (err) {
+                    alert("Lỗi kết nối máy chủ!");
+                  }
+                }}
+                className="space-y-4 text-left"
+              >
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">MÃ SẢN PHẨM (KHÔNG THỂ ĐỔI)</label>
+                    <input
+                      type="text"
+                      disabled
+                      value={editingProduct.id}
+                      className="w-full px-3 py-2 bg-stone-100 border border-stone-200 rounded-xl text-xs font-mono font-bold text-stone-500 cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">DANH MỤC *</label>
+                    <select
+                      value={editingProduct.category}
+                      onChange={(e) => setEditingProduct({...editingProduct, category: e.target.value})}
+                      className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-bold text-stone-900"
+                    >
+                      <option value="espresso">Cà phê Ý (Espresso)</option>
+                      <option value="brewed">Cà phê Phin (Brewed)</option>
+                      <option value="coldbrew">Cà phê Lạnh (Cold Brew)</option>
+                      <option value="tea">Trà & Trái cây (Tea)</option>
+                      <option value="pastry">Bánh & Tráng miệng (Pastry)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-stone-500 block">TÊN MÓN (TIẾNG VIỆT) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingProduct.name.vi}
+                    onChange={(e) => setEditingProduct({
+                      ...editingProduct,
+                      name: { ...editingProduct.name, vi: e.target.value }
+                    })}
+                    className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-stone-500 block">TÊN MÓN (TIẾNG ANH) *</label>
+                  <input
+                    type="text"
+                    required
+                    value={editingProduct.name.en}
+                    onChange={(e) => setEditingProduct({
+                      ...editingProduct,
+                      name: { ...editingProduct.name, en: e.target.value }
+                    })}
+                    className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-semibold text-stone-900"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">GIÁ VND *</label>
+                    <input
+                      type="number"
+                      required
+                      value={editingProduct.priceVND}
+                      onChange={(e) => setEditingProduct({...editingProduct, priceVND: Number(e.target.value)})}
+                      className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-bold font-mono text-stone-900"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">GIÁ USD *</label>
+                    <input
+                      type="number"
+                      step="0.1"
+                      required
+                      value={editingProduct.priceUSD}
+                      onChange={(e) => setEditingProduct({...editingProduct, priceUSD: Number(e.target.value)})}
+                      className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-bold font-mono text-stone-900"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-stone-500 block">BIỂU TƯỢNG (EMOJI) *</label>
+                    <input
+                      type="text"
+                      required
+                      value={editingProduct.image}
+                      onChange={(e) => setEditingProduct({...editingProduct, image: e.target.value})}
+                      className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-bold text-center text-stone-900"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-stone-500 block">MÔ TẢ (TIẾNG VIỆT)</label>
+                  <textarea
+                    value={editingProduct.description.vi}
+                    onChange={(e) => setEditingProduct({
+                      ...editingProduct,
+                      description: { ...editingProduct.description, vi: e.target.value }
+                    })}
+                    className="w-full px-3 py-2 bg-stone-55 border border-stone-200 rounded-xl text-xs font-medium h-16 text-stone-900"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="edit_popular"
+                    checked={editingProduct.popular}
+                    onChange={(e) => setEditingProduct({...editingProduct, popular: e.target.checked})}
+                    className="rounded-sm text-[#2D5A47] focus:ring-[#2D5A47]"
+                  />
+                  <label htmlFor="edit_popular" className="text-xs font-bold text-stone-700 cursor-pointer select-none">Món bán chạy nổi bật (Popular)</label>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-[#2D5A47] hover:bg-[#1E3F31] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer"
+                >
+                  Lưu thay đổi
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
