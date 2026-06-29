@@ -7,11 +7,11 @@ import {
   getOrder, 
   updateOrder,
   OrderRecord 
-} from "../lib/firebase-db";
-import { addNotification, updateUserPointsAndTier } from "./utils";
-import { authenticateToken, AuthenticatedRequest } from "./middleware";
-import { sendSSEEvent } from "./sse";
-import { processPayment } from "./webhook";
+} from "../lib/firebase-db.js";
+import { addNotification, updateUserPointsAndTier } from "./utils.js";
+import { authenticateToken, AuthenticatedRequest } from "./middleware.js";
+import { sendSSEEvent } from "./sse.js";
+import { processPayment } from "./webhook.js";
 
 const router = express.Router();
 

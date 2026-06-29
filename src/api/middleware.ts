@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { getUser, UserRecord } from "../lib/firebase-db";
+import { getUser, UserRecord } from "../lib/firebase-db.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "mellodi-premium-loyalty-secret-key";
 

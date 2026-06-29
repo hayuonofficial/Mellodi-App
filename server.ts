@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
-import apiRouter from "./src/api";
-import { addClient, removeClient } from "./src/api/sse";
+import apiRouter from "./src/api/index.js";
+import { addClient, removeClient } from "./src/api/sse.js";
 
 const app = express();
 const PORT = 3000;

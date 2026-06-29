@@ -10,8 +10,8 @@ import {
   UserRecord,
   OrderRecord,
   TransactionRecord
-} from "../lib/firebase-db";
-import { products } from "../data/products";
+} from "../lib/firebase-db.js";
+import { products } from "../data/products.js";
 
 const router = express.Router();
 

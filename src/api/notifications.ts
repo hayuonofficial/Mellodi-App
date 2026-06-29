@@ -4,7 +4,7 @@ import {
   markNotificationRead, 
   markAllNotificationsRead, 
   deleteNotification 
-} from "../lib/firebase-db";
+} from "../lib/firebase-db.js";
 
 const router = express.Router();
 

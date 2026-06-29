@@ -1,13 +1,13 @@
 import express from "express";
-import authRouter from "./auth";
-import walletRouter from "./wallet";
-import ordersRouter from "./orders";
-import giftsRouter from "./gifts";
-import notificationsRouter from "./notifications";
-import usersRouter from "./users";
-import webhookRouter from "./webhook";
-import adminRouter from "./admin";
-import educationRouter from "./education";
+import authRouter from "./auth.js";
+import walletRouter from "./wallet.js";
+import ordersRouter from "./orders.js";
+import giftsRouter from "./gifts.js";
+import notificationsRouter from "./notifications.js";
+import usersRouter from "./users.js";
+import webhookRouter from "./webhook.js";
+import adminRouter from "./admin.js";
+import educationRouter from "./education.js";
 
 const apiRouter = express.Router();
 

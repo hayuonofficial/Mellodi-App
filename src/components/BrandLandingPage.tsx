@@ -304,9 +304,19 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
       });
       const data = await res.json();
       if (!res.ok) {
-        setStudySubmitStatus({ success: false, message: data.error || 'Đăng ký thất bại' });
+        const errMsg = language === 'vi' 
+          ? (data.error || 'Đăng ký thất bại') 
+          : language === 'ko' 
+            ? '상담 신청에 실패했습니다. 다시 시도해주세요.' 
+            : (data.error || 'Registration failed. Please try again.');
+        setStudySubmitStatus({ success: false, message: errMsg });
       } else {
-        setStudySubmitStatus({ success: true, message: data.message });
+        const successMsg = language === 'vi' 
+          ? 'Đăng ký tư vấn thành công! Chúng tôi sẽ liên hệ sớm nhất.' 
+          : language === 'ko' 
+            ? '상담 신청이 성공적으로 접수되었습니다! 곧 연락드리겠습니다.' 
+            : 'Registration successful! We will contact you shortly.';
+        setStudySubmitStatus({ success: true, message: successMsg });
         setStudyForm({ name: '', email: '', phone: '' });
         setTimeout(() => {
           setIsStudyModalOpen(false);
@@ -314,7 +324,12 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
         }, 3000);
       }
     } catch (err) {
-      setStudySubmitStatus({ success: false, message: 'Lỗi kết nối máy chủ.' });
+      const connErrMsg = language === 'vi' 
+        ? 'Lỗi kết nối máy chủ.' 
+        : language === 'ko' 
+          ? '서버 연결에 실패했습니다.' 
+          : 'Server connection error.';
+      setStudySubmitStatus({ success: false, message: connErrMsg });
     } finally {
       setIsStudySubmitting(false);
     }
@@ -408,66 +423,6 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
               </div>
             </div>
 
-            {/* Company Info & Contact Details */}
-            <div className="bg-white rounded-3xl border border-coffee-100 p-8 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-8 items-start text-left">
-              <div className="md:col-span-7 space-y-6">
-                <div className="space-y-2">
-                  <span className="text-[10px] font-bold text-[#A37B45] uppercase tracking-wider flex items-center space-x-1">
-                    <Building className="w-3.5 h-3.5" />
-                    <span>{translations[language]['footer.about.title']}</span>
-                  </span>
-                  <h3 className="font-serif text-xl font-bold text-coffee-950">{translations[language]['landing.contact.company']}</h3>
-                  <p className="text-xs text-stone-500 leading-relaxed">
-                    {translations[language]['landing.contact.desc']}
-                  </p>
-                </div>
-
-                <div className="space-y-3.5 text-xs font-semibold text-stone-600">
-                  <div className="flex items-start space-x-3">
-                    <MapPin className="w-4 h-4 text-[#A37B45] shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-coffee-950 font-bold">{translations[language]['landing.contact.address.title']}</p>
-                      <p className="text-[11px] text-stone-500 font-medium mt-0.5">{translations[language]['landing.contact.address.val']}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Phone className="w-4 h-4 text-[#A37B45] shrink-0" />
-                    <div>
-                      <p className="text-coffee-950 font-bold">{translations[language]['landing.contact.phone.title']}</p>
-                      <p className="text-[11px] text-stone-500 font-mono font-medium mt-0.5">0375681791 (24/7)</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-3">
-                    <Mail className="w-4 h-4 text-[#A37B45] shrink-0" />
-                    <div>
-                      <p className="text-coffee-950 font-bold">{translations[language]['landing.contact.email.title']}</p>
-                      <p className="text-[11px] text-stone-500 font-mono font-medium mt-0.5">contact@mellodi.vn</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="md:col-span-5 bg-[#FAF9F6] border border-coffee-150/40 rounded-2xl p-6 space-y-4">
-                <h4 className="font-serif text-sm font-bold text-coffee-950 flex items-center space-x-1.5 border-b border-coffee-100 pb-2">
-                  <Clock className="w-4.5 h-4.5 text-[#A37B45]" />
-                  <span>{translations[language]['landing.contact.hours.title']}</span>
-                </h4>
-                <div className="space-y-2 text-xs font-semibold text-stone-600">
-                  <div className="flex justify-between">
-                    <span>{translations[language]['landing.contact.hours.weekday'].split(': ')[0]}:</span>
-                    <span className="font-mono text-coffee-950">{translations[language]['landing.contact.hours.weekday'].split(': ')[1]}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>{translations[language]['landing.contact.hours.weekend'].split(': ')[0]}:</span>
-                    <span className="font-mono text-coffee-950">{translations[language]['landing.contact.hours.weekend'].split(': ')[1]}</span>
-                  </div>
-                  <div className="pt-2 border-t border-stone-200/50 text-[10px] text-stone-400 leading-normal">
-                    {translations[language]['landing.contact.hours.note']}
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Study Abroad in Korea Section */}
             <div className="relative bg-gradient-to-br from-[#FAF9F6] to-[#F5EBE6] rounded-3xl border border-coffee-200/60 p-8 sm:p-10 shadow-xl overflow-hidden text-left mt-8">
               {/* Decorative Blur Backgrounds */}
@@ -521,6 +476,66 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                       <span>{translations[language]['landing.education.btn']}</span>
                       <span className="transition-transform duration-300 group-hover:translate-x-2">{"----->"}</span>
                     </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Company Info & Contact Details */}
+            <div className="bg-white rounded-3xl border border-coffee-100 p-8 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-8 items-start text-left mt-8">
+              <div className="md:col-span-7 space-y-6">
+                <div className="space-y-2">
+                  <span className="text-[10px] font-bold text-[#A37B45] uppercase tracking-wider flex items-center space-x-1">
+                    <Building className="w-3.5 h-3.5" />
+                    <span>{translations[language]['footer.about.title']}</span>
+                  </span>
+                  <h3 className="font-serif text-xl font-bold text-coffee-950">{translations[language]['landing.contact.company']}</h3>
+                  <p className="text-xs text-stone-500 leading-relaxed">
+                    {translations[language]['landing.contact.desc']}
+                  </p>
+                </div>
+
+                <div className="space-y-3.5 text-xs font-semibold text-stone-600">
+                  <div className="flex items-start space-x-3">
+                    <MapPin className="w-4 h-4 text-[#A37B45] shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-coffee-950 font-bold">{translations[language]['landing.contact.address.title']}</p>
+                      <p className="text-[11px] text-stone-500 font-medium mt-0.5">{translations[language]['landing.contact.address.val']}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Phone className="w-4 h-4 text-[#A37B45] shrink-0" />
+                    <div>
+                      <p className="text-coffee-950 font-bold">{translations[language]['landing.contact.phone.title']}</p>
+                      <p className="text-[11px] text-stone-500 font-mono font-medium mt-0.5">0375681791 (24/7)</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-3">
+                    <Mail className="w-4 h-4 text-[#A37B45] shrink-0" />
+                    <div>
+                      <p className="text-coffee-950 font-bold">{translations[language]['landing.contact.email.title']}</p>
+                      <p className="text-[11px] text-stone-500 font-mono font-medium mt-0.5">contact@mellodi.vn</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="md:col-span-5 bg-[#FAF9F6] border border-coffee-150/40 rounded-2xl p-6 space-y-4">
+                <h4 className="font-serif text-sm font-bold text-coffee-950 flex items-center space-x-1.5 border-b border-coffee-100 pb-2">
+                  <Clock className="w-4.5 h-4.5 text-[#A37B45]" />
+                  <span>{translations[language]['landing.contact.hours.title']}</span>
+                </h4>
+                <div className="space-y-2 text-xs font-semibold text-stone-600">
+                  <div className="flex justify-between">
+                    <span>{translations[language]['landing.contact.hours.weekday'].split(': ')[0]}:</span>
+                    <span className="font-mono text-coffee-950">{translations[language]['landing.contact.hours.weekday'].split(': ')[1]}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>{translations[language]['landing.contact.hours.weekend'].split(': ')[0]}:</span>
+                    <span className="font-mono text-coffee-950">{translations[language]['landing.contact.hours.weekend'].split(': ')[1]}</span>
+                  </div>
+                  <div className="pt-2 border-t border-stone-200/50 text-[10px] text-stone-400 leading-normal">
+                    {translations[language]['landing.contact.hours.note']}
                   </div>
                 </div>
               </div>

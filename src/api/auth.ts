@@ -6,9 +6,9 @@ import {
   createUser, 
   updateUser, 
   UserRecord 
-} from "../lib/firebase-db";
-import { addNotification } from "./utils";
-import { JWT_SECRET } from "./middleware";
+} from "../lib/firebase-db.js";
+import { addNotification } from "./utils.js";
+import { JWT_SECRET } from "./middleware.js";
 
 const router = express.Router();
 

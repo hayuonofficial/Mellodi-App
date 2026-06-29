@@ -8,9 +8,9 @@ import {
   updateRedeemedGift, 
   createTransaction, 
   RedeemedGift 
-} from "../lib/firebase-db";
-import { addNotification } from "./utils";
-import { authenticateToken, AuthenticatedRequest } from "./middleware";
+} from "../lib/firebase-db.js";
+import { addNotification } from "./utils.js";
+import { authenticateToken, AuthenticatedRequest } from "./middleware.js";
 
 const router = express.Router();
 

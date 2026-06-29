@@ -1,5 +1,5 @@
-import { createNotification, UserNotification, getUser, updateUser, UserRecord } from "../lib/firebase-db";
-import { sendSSEEvent } from "./sse";
+import { createNotification, UserNotification, getUser, updateUser, UserRecord } from "../lib/firebase-db.js";
+import { sendSSEEvent } from "./sse.js";
 
 export async function addNotification(
   userId: string,

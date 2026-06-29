@@ -1,5 +1,5 @@
 import express from "express";
-import { getUser } from "../lib/firebase-db";
+import { getUser } from "../lib/firebase-db.js";
 
 const router = express.Router();
 

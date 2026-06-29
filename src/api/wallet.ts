@@ -4,11 +4,11 @@ import {
   createTransaction, 
   getUserTransactions,
   TransactionRecord 
-} from "../lib/firebase-db";
-import { addNotification, updateUserPointsAndTier } from "./utils";
-import { authenticateToken, AuthenticatedRequest } from "./middleware";
-import { processPayment } from "./webhook";
-import { sendSSEEvent } from "./sse";
+} from "../lib/firebase-db.js";
+import { addNotification, updateUserPointsAndTier } from "./utils.js";
+import { authenticateToken, AuthenticatedRequest } from "./middleware.js";
+import { processPayment } from "./webhook.js";
+import { sendSSEEvent } from "./sse.js";
 
 const router = express.Router();
 

@@ -1,5 +1,5 @@
 import express from "express";
-import { createEducationConsultation, EducationConsultation } from "../lib/firebase-db";
+import { createEducationConsultation, EducationConsultation } from "../lib/firebase-db.js";
 
 const router = express.Router();
 

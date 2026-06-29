@@ -6,9 +6,9 @@ import {
   updateUser, 
   getOrder, 
   updateOrder 
-} from "../lib/firebase-db";
-import { addNotification } from "./utils";
-import { startOrderLifecycleSimulation } from "./orders";
+} from "../lib/firebase-db.js";
+import { addNotification } from "./utils.js";
+import { startOrderLifecycleSimulation } from "./orders.js";
 
 const router = express.Router();
 
