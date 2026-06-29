@@ -20,6 +20,7 @@ import { AdminDashboard } from './components/AdminDashboard';
 import { BrandLandingPage } from './components/BrandLandingPage';
 import { AppDownloadGate } from './components/AppDownloadGate';
 import { AIChatbot } from './components/AIChatbot';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { translations } from './translations';
 import { motion, AnimatePresence } from 'motion/react';
 import { Award, Smartphone, X } from 'lucide-react';
@@ -395,7 +396,9 @@ function AppContent() {
             exit={{ opacity: 0, y: -15 }}
             transition={{ duration: 0.4 }}
           >
-            <AdminDashboard />
+            <ErrorBoundary>
+              <AdminDashboard />
+            </ErrorBoundary>
           </motion.div>
         );
       default:
@@ -576,7 +579,9 @@ function AppContent() {
         <main className="flex-grow">
           {activeWebSection === 'admin' && (currentUser?.role === 'admin' || currentUser?.role === 'manager') ? (
             <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-              <AdminDashboard />
+              <ErrorBoundary>
+                <AdminDashboard />
+              </ErrorBoundary>
             </div>
           ) : (
             <BrandLandingPage activeSection={activeWebSection} onOpenApp={() => setShowDownloadGate(true)} />
