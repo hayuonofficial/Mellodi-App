@@ -434,7 +434,7 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                     <Phone className="w-4 h-4 text-[#A37B45] shrink-0" />
                     <div>
                       <p className="text-coffee-950 font-bold">{translations[language]['landing.contact.phone.title']}</p>
-                      <p className="text-[11px] text-stone-500 font-mono font-medium mt-0.5">0375681791 (08:00 - 22:00)</p>
+                      <p className="text-[11px] text-stone-500 font-mono font-medium mt-0.5">0375681791 (24/7)</p>
                     </div>
                   </div>
                   <div className="flex items-center space-x-3">
@@ -485,7 +485,7 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                     <img 
                       src="/korea_study_abroad.png" 
                       alt="Study Abroad in South Korea" 
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="w-full h-full object-cover scale-105 origin-top-left transition-transform duration-700 group-hover:scale-110"
                     />
                   </motion.div>
                 </div>
