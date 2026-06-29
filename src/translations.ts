@@ -132,7 +132,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'bento.stores.desc': 'Tìm kiếm cửa hàng gần nhất, cập nhật khoảng cách & thời gian hoạt động.',
 
     // Footer
-    'footer.desc': 'Ứng dụng công nghệ đặt nước, tích lũy điểm LEN và quản lý thẻ ví tiện lợi lấy cảm hứng từ phong cách Starbucks.',
+    'footer.desc': 'Ứng dụng công nghệ độc quyền Mellodi - Mang đến trải nghiệm thưởng thức cà phê thượng hạng cùng thẻ thành viên thông minh và ví điện tử tích điểm LEN.',
     'footer.about.title': 'Về chúng tôi',
     'footer.about.story': 'Câu chuyện Mellodi',
     'footer.about.beans': 'Thế giới hạt cà phê',
@@ -445,7 +445,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'bento.stores.desc': 'Locate nearest store, check distance & real-time operation hours.',
 
     // Footer
-    'footer.desc': 'Advanced technology app for online ordering, LEN points loyalty rewards, and digital wallets inspired by Starbucks.',
+    'footer.desc': 'Mellodi Exclusive Technology App - Offering a premium coffee experience with smart membership cards, digital wallets, and LEN loyalty rewards.',
     'footer.about.title': 'About Us',
     'footer.about.story': 'Mellodi Story',
     'footer.about.beans': 'The World of Beans',

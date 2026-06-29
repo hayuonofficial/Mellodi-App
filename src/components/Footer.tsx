@@ -64,7 +64,7 @@ export const Footer: React.FC = () => {
         <div className="border-t border-coffee-900 pt-6 flex flex-col sm:flex-row justify-between items-center text-[10.5px] text-stone-400 gap-4">
           <div className="flex items-center space-x-1">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
-            <span>© 2026 Mellodi Vietnam. Inspired by Starbucks Premium Experience.</span>
+            <span>© 2026 Mellodi Vietnam. Bản quyền công nghệ thuộc về Mellodi Coffee. All rights reserved.</span>
           </div>
 
           <div className="flex items-center space-x-1">
