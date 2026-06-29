@@ -750,6 +750,9 @@ export const AdminDashboard: React.FC = () => {
                             const data = await response.json();
                             if (response.ok) {
                               addLog("✅ [CRM] Liên kết thẻ thành viên NFC thành công!");
+                              if (data.user?.nfcCard?.loginToken) {
+                                addLog(`📝 [NFC] Đã ghi URL tự động đăng nhập: ${window.location.origin}/?nfc_token=${data.user.nfcCard.loginToken}`);
+                              }
                               setNfcWriteState('success');
                               setNfcWriteMsg(`Đã cấp thẻ NFC ${nfcWriteCardId} cho khách hàng thành công.`);
                               fetchData(); // Reload customer list

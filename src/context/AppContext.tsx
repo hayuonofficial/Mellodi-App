@@ -19,6 +19,7 @@ export interface AppUser {
     status: 'active' | 'suspended';
     linkedAt: string;
     secretKey: string;
+    loginToken?: string;
   };
 }
 
@@ -41,6 +42,7 @@ interface AppContextProps {
   setLanguage: (lang: Language) => void;
   registerUser: (name: string, email: string, phone: string, password: string) => Promise<{ success: boolean; message: string }>;
   loginUser: (email: string, password: string) => Promise<{ success: boolean; message: string }>;
+  nfcLogin: (token: string) => Promise<{ success: boolean; message: string }>;
   logoutUser: () => void;
   topUpWallet: (amountVND: number, method?: string) => Promise<{ success: boolean; message: string; qrCodeUrl?: string; memo?: string; bankInfo?: any }>;
   buyLenPoints: (amountVND: number) => Promise<{ success: boolean; message: string }>;
@@ -411,6 +413,42 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { success: true, message: 'Đăng nhập thành công!' };
     } catch (error) {
       return { success: false, message: 'Lỗi kết nối máy chủ đăng nhập.' };
+    }
+  };
+
+  const nfcLogin = async (token: string) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/nfc-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { success: false, message: data.error || 'NFC login failed' };
+      }
+      
+      // Store token and user details
+      localStorage.setItem('mellodi_jwt_token', data.token);
+      localStorage.setItem('mellodi_user_id', data.user.id);
+      
+      setCurrentUser(data.user);
+      setWalletBalance(data.user.walletBalance);
+      setLenPoints(data.user.lenPoints);
+
+      // Fetch user's orders securely
+      const ordersRes = await fetch(`${API_BASE_URL}/api/orders/my-orders`, {
+        headers: getAuthHeaders()
+      });
+      if (ordersRes.ok) {
+        const userOrders = await ordersRes.json();
+        setOrders(userOrders);
+      } else {
+        setOrders([]);
+      }
+      return { success: true, message: 'Đăng nhập thành công bằng NFC!' };
+    } catch (error) {
+      return { success: false, message: 'Lỗi kết nối máy chủ đăng nhập NFC.' };
     }
   };
 
@@ -866,6 +904,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setLanguage,
       registerUser,
       loginUser,
+      nfcLogin,
       logoutUser,
       topUpWallet,
       buyLenPoints,

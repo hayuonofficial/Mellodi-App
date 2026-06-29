@@ -63,6 +63,7 @@ export interface UserState {
     status: 'active' | 'suspended';
     linkedAt: string;
     secretKey: string;
+    loginToken?: string;
   };
 }
 

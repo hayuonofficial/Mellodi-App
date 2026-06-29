@@ -5,6 +5,7 @@ import {
   getUserByEmail, 
   createUser, 
   updateUser, 
+  getAllUsers,
   UserRecord 
 } from "../lib/firebase-db.js";
 import { addNotification } from "./utils.js";
@@ -179,6 +180,56 @@ router.post("/login", async (req, res) => {
       error: "Lỗi hệ thống đăng nhập.",
       details: error.message || String(error),
       stack: error.stack
+    });
+  }
+});
+
+// API: Auth - NFC Card Auto-Login
+router.post("/nfc-login", async (req, res) => {
+  const { token } = req.body;
+
+  if (!token || typeof token !== "string") {
+    return res.status(400).json({ error: "Thiếu mã xác thực NFC hoặc mã không hợp lệ!" });
+  }
+
+  try {
+    const allUsers = await getAllUsers();
+    const user = allUsers.find(u => u.nfcCard?.loginToken === token);
+
+    if (!user || !user.nfcCard) {
+      return res.status(401).json({ error: "Thẻ thành viên NFC này chưa được đăng ký hoặc không còn hiệu lực!" });
+    }
+
+    if (user.nfcCard.status !== "active") {
+      return res.status(403).json({ error: "Thẻ thành viên NFC này hiện đang bị khóa!" });
+    }
+
+    // Generate JWT token
+    const jwtToken = generateToken(user);
+
+    // Add notification
+    await addNotification(
+      user.id,
+      {
+        vi: "Đăng nhập nhanh bằng thẻ NFC thành công 💳",
+        en: "NFC Card Quick Login Successful 💳",
+        ko: "NFC 카드로 빠른 로그인 성공 💳"
+      },
+      {
+        vi: "Chào mừng bạn quay trở lại! Bạn đã được đăng nhập an toàn bằng cách chạm thẻ thành viên NFC.",
+        en: "Welcome back! You have been securely logged in by tapping your NFC membership card.",
+        ko: "다시 오신 것을 환영합니다! NFC 회원 카드를 터치하여 안전하게 로그인되었습니다."
+      },
+      "system"
+    );
+
+    const { password: _, ...safeUser } = user;
+    res.json({ success: true, user: safeUser, token: jwtToken });
+  } catch (error: any) {
+    console.error("NFC Login error:", error);
+    res.status(500).json({ 
+      error: "Lỗi hệ thống đăng nhập bằng thẻ NFC.",
+      details: error.message || String(error)
     });
   }
 });

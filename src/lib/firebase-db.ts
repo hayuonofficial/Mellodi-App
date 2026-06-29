@@ -97,6 +97,7 @@ export interface UserRecord {
     status: 'active' | 'suspended';
     linkedAt: string;
     secretKey: string;
+    loginToken?: string;
   };
 }
 

@@ -26,12 +26,39 @@ import { Award, Smartphone, X } from 'lucide-react';
 
 function AppContent() {
   const [activeTab, setActiveTab] = useState<string>('home');
-  const { currentUser, isLoading, tierUpgradeInfo, setTierUpgradeInfo, language, setLanguage, logoutUser } = useApp();
+  const { currentUser, isLoading, tierUpgradeInfo, setTierUpgradeInfo, language, setLanguage, logoutUser, nfcLogin } = useApp();
   const [splashDone, setSplashDone] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState<boolean>(false);
   const [showDownloadGate, setShowDownloadGate] = useState<boolean>(false);
   const [showWebAuthModal, setShowWebAuthModal] = useState<boolean>(false);
   const [activeWebSection, setActiveWebSection] = useState<string>('home');
+  const [isNfcLoggingIn, setIsNfcLoggingIn] = useState(false);
+  const [nfcLoginError, setNfcLoginError] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const nfcToken = urlParams.get('nfc_token');
+    if (nfcToken) {
+      // Clear the token from the URL so it looks clean and cannot be bookmarked
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, newUrl);
+
+      const doNfcLogin = async () => {
+        setIsNfcLoggingIn(true);
+        setNfcLoginError(null);
+        // 1.2s delay to give a premium, high-tech connection feel
+        await new Promise(r => setTimeout(r, 1200));
+        const result = await nfcLogin(nfcToken);
+        if (!result.success) {
+          setNfcLoginError(result.message);
+          setTimeout(() => setIsNfcLoggingIn(false), 3000);
+        } else {
+          setIsNfcLoggingIn(false);
+        }
+      };
+      doNfcLogin();
+    }
+  }, [nfcLogin]);
 
   React.useEffect(() => {
     if (currentUser) {
@@ -58,9 +85,46 @@ function AppContent() {
     return () => clearTimeout(timer);
   }, []);
 
+  const renderNfcOverlay = () => {
+    if (!isNfcLoggingIn) return null;
+    return (
+      <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#2D5A47]/95 text-white backdrop-blur-md p-6">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="flex flex-col items-center space-y-6 text-center"
+        >
+          {nfcLoginError ? (
+            <>
+              <div className="w-20 h-20 rounded-full bg-rose-500/10 border border-rose-500 flex items-center justify-center text-rose-500">
+                <X className="w-10 h-10 animate-bounce" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-serif text-xl font-bold text-rose-300">Đăng nhập NFC Thất Bại</h3>
+                <p className="text-xs text-stone-300 max-w-xs">{nfcLoginError}</p>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="relative flex items-center justify-center">
+                <div className="w-20 h-20 rounded-full border-4 border-white/20 border-t-[#A37B45] animate-spin"></div>
+                <Smartphone className="w-8 h-8 text-white absolute animate-pulse" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="font-serif text-xl font-bold text-amber-100 animate-pulse">Kết nối Thẻ NFC Mellodi...</h3>
+                <p className="text-xs text-white/70">Đang xác thực chữ ký bảo mật và đăng nhập...</p>
+              </div>
+            </>
+          )}
+        </motion.div>
+      </div>
+    );
+  };
+
   if (!splashDone || isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#2D5A47] to-[#1F3F32] text-white overflow-hidden relative">
+        {renderNfcOverlay()}
         {/* Ambient background glow effects */}
         <motion.div 
           className="absolute w-96 h-96 bg-white/5 rounded-full blur-3xl"
@@ -304,6 +368,7 @@ function AppContent() {
   if (!isMobileDevice || !currentUser) {
     return (
       <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F6] text-stone-850 font-sans">
+        {renderNfcOverlay()}
         {/* Web Header */}
         <header className="sticky top-0 z-45 bg-white/95 backdrop-blur-md border-b border-coffee-100 py-3.5 px-4 sm:px-6 shadow-xs">
           <div className="max-w-5xl mx-auto flex flex-col md:flex-row md:justify-between md:items-center gap-3 md:gap-4">
@@ -488,6 +553,7 @@ function AppContent() {
   // Native Mobile PWA View
   return (
     <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F6] text-coffee-950 relative overflow-x-hidden font-sans">
+      {renderNfcOverlay()}
       
       {/* Upper Navigation inside Mobile App - Only shown when logged in */}
       {currentUser && <Navbar activeTab={activeTab} setActiveTab={setActiveTab} />}

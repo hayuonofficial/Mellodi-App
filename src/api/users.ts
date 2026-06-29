@@ -47,13 +47,15 @@ router.post("/nfc/link", async (req, res) => {
 
     // Generate a unique 32-character secret key for dynamic HMAC verification (anti-cloning)
     const secretKey = crypto.randomBytes(16).toString("hex");
+    const loginToken = crypto.randomBytes(20).toString("hex");
 
     const updatedUser = await updateUser(userId, {
       nfcCard: {
         cardId,
         status: "active",
         linkedAt: new Date().toISOString(),
-        secretKey
+        secretKey,
+        loginToken
       }
     });
 

@@ -1600,6 +1600,9 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                           const data = await response.json();
                           if (data.success) {
                             addLog(`🎉 [Success] Thiết lập thẻ NFC thành công! Thẻ đã kích hoạt.`);
+                            if (data.user?.nfcCard?.loginToken) {
+                              addLog(`📝 [NFC] Đã ghi URL tự động đăng nhập: ${window.location.origin}/?nfc_token=${data.user.nfcCard.loginToken}`);
+                            }
                             setNfcSimState('success');
                             setNfcSimMessage(`Đã kích hoạt và liên kết thẻ NFC thành công! Mã UID: ${simCardId}`);
                             setCurrentUser(data.user);
