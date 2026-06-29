@@ -448,8 +448,7 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                 {/* Right: Content & Call to Action */}
                 <div className="lg:col-span-6 space-y-6">
                   <div className="space-y-3">
-                    <span className="inline-flex items-center space-x-1 bg-amber-100 border border-amber-200/60 px-3 py-1 rounded-full text-[9px] font-bold text-amber-800 uppercase tracking-widest">
-                      <Sparkles className="w-3 h-3 text-amber-600" />
+                    <span className="inline-flex items-center bg-amber-100 border border-amber-200/60 px-3 py-1 rounded-full text-[9px] font-bold text-amber-800 uppercase tracking-widest">
                       <span>Beyond Coffee, Beyond Possibilities</span>
                     </span>
                     <h2 className="font-serif text-2xl sm:text-3xl font-black text-coffee-950 leading-tight">
