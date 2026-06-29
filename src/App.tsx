@@ -301,7 +301,7 @@ function AppContent() {
     );
   }
 
-  if (!isMobileDevice) {
+  if (!isMobileDevice || !currentUser) {
     return (
       <div className="min-h-screen flex flex-col justify-between bg-[#FAF9F6] text-stone-850 font-sans">
         {/* Web Header */}
