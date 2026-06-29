@@ -32,12 +32,11 @@ __export(server_exports, {
   default: () => server_default
 });
 module.exports = __toCommonJS(server_exports);
-var import_express10 = __toESM(require("express"), 1);
+var import_express11 = __toESM(require("express"), 1);
 var import_path2 = __toESM(require("path"), 1);
-var import_vite = require("vite");
 
 // src/api/index.ts
-var import_express9 = __toESM(require("express"), 1);
+var import_express10 = __toESM(require("express"), 1);
 
 // src/api/auth.ts
 var import_express = __toESM(require("express"), 1);
@@ -49,17 +48,34 @@ var import_app = require("firebase/app");
 var import_firestore = require("firebase/firestore");
 var import_fs = __toESM(require("fs"), 1);
 var import_path = __toESM(require("path"), 1);
+async function withTimeout(promise, timeoutMs = 3500) {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Firestore operation timeout")), timeoutMs);
+  });
+  promise.catch((err) => {
+    console.warn("[Database] Background Firestore operation failed or timed out:", err.message || err);
+  });
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutId);
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
+}
 var firestoreDb = null;
 var isFirebaseAvailable = false;
 try {
   let firebaseConfig = {
-    apiKey: "AIzaSyD0arVTJCiNE3uLR0aRgiAhyKLaykMnR00",
-    authDomain: "mellodi-638a6.firebaseapp.com",
-    projectId: "mellodi-638a6",
-    storageBucket: "mellodi-638a6.firebasestorage.app",
-    messagingSenderId: "670516945218",
-    appId: "1:670516945218:web:14979f45361deda20268db",
-    measurementId: "G-W2SFMBG0YD"
+    apiKey: "AIzaSyDHnlmY5BMs8yps7A0UaVO6WfY33Cbjvg0",
+    authDomain: "mellodidatabase.firebaseapp.com",
+    projectId: "mellodidatabase",
+    storageBucket: "mellodidatabase.firebasestorage.app",
+    messagingSenderId: "762274784498",
+    appId: "1:762274784498:web:1b6fb8f376975069e31c6b",
+    measurementId: "G-SZDNTTJSPS"
   };
   if (process.env.FIREBASE_API_KEY) {
     firebaseConfig = {
@@ -102,6 +118,7 @@ var DEFAULT_LOCAL_DB = {
   orders: [],
   transactions: [],
   redeemedGifts: [],
+  educationConsultations: [],
   notifications: [
     {
       id: "notif-welcome",
@@ -126,7 +143,13 @@ function readLocalDb() {
   try {
     if (import_fs.default.existsSync(localDbPath)) {
       const content = import_fs.default.readFileSync(localDbPath, "utf-8");
-      return JSON.parse(content);
+      const data = JSON.parse(content);
+      if (!data.users) data.users = [];
+      if (!data.orders) data.orders = [];
+      if (!data.transactions) data.transactions = [];
+      if (!data.redeemedGifts) data.redeemedGifts = [];
+      if (!data.notifications) data.notifications = [];
+      return data;
     }
   } catch (err) {
     console.error("[Database] Failed to read local_db.json file:", err);
@@ -145,7 +168,7 @@ async function getUser(userId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const userRef = (0, import_firestore.doc)(firestoreDb, "users", userId);
-      const userSnap = await (0, import_firestore.getDoc)(userRef);
+      const userSnap = await withTimeout((0, import_firestore.getDoc)(userRef));
       if (userSnap.exists()) {
         return { id: userSnap.id, ...userSnap.data() };
       }
@@ -162,7 +185,7 @@ async function getUserByEmail(email) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = (0, import_firestore.query)((0, import_firestore.collection)(firestoreDb, "users"), (0, import_firestore.where)("email", "==", cleanEmail));
-      const querySnap = await (0, import_firestore.getDocs)(q);
+      const querySnap = await withTimeout((0, import_firestore.getDocs)(q));
       if (!querySnap.empty) {
         const docSnap = querySnap.docs[0];
         return { id: docSnap.id, ...docSnap.data() };
@@ -178,7 +201,7 @@ async function getUserByEmail(email) {
 async function createUser(user) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await (0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "users", user.id), user);
+      await withTimeout((0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "users", user.id), user));
       return;
     } catch (e) {
       console.error("[Database] Error creating user in Firestore, falling back:", e);
@@ -192,8 +215,8 @@ async function updateUser(userId, updates) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const userRef = (0, import_firestore.doc)(firestoreDb, "users", userId);
-      await (0, import_firestore.updateDoc)(userRef, updates);
-      const userSnap = await (0, import_firestore.getDoc)(userRef);
+      await withTimeout((0, import_firestore.updateDoc)(userRef, updates));
+      const userSnap = await withTimeout((0, import_firestore.getDoc)(userRef));
       return { id: userSnap.id, ...userSnap.data() };
     } catch (e) {
       console.error("[Database] Error updating user in Firestore, falling back:", e);
@@ -211,7 +234,7 @@ async function updateUser(userId, updates) {
 async function createOrder(order) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await (0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "orders", order.id), order);
+      await withTimeout((0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "orders", order.id), order));
       return;
     } catch (e) {
       console.error("[Database] Error creating order in Firestore, falling back:", e);
@@ -225,7 +248,7 @@ async function getUserOrders(userId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = (0, import_firestore.query)((0, import_firestore.collection)(firestoreDb, "orders"), (0, import_firestore.where)("userId", "==", userId));
-      const querySnap = await (0, import_firestore.getDocs)(q);
+      const querySnap = await withTimeout((0, import_firestore.getDocs)(q));
       const orders = querySnap.docs.map((doc2) => ({ id: doc2.id, ...doc2.data() }));
       return orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
@@ -239,7 +262,7 @@ async function getOrder(orderId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const orderRef = (0, import_firestore.doc)(firestoreDb, "orders", orderId);
-      const orderSnap = await (0, import_firestore.getDoc)(orderRef);
+      const orderSnap = await withTimeout((0, import_firestore.getDoc)(orderRef));
       if (orderSnap.exists()) {
         return { id: orderSnap.id, ...orderSnap.data() };
       }
@@ -255,8 +278,8 @@ async function updateOrder(orderId, updates) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const orderRef = (0, import_firestore.doc)(firestoreDb, "orders", orderId);
-      await (0, import_firestore.updateDoc)(orderRef, updates);
-      const orderSnap = await (0, import_firestore.getDoc)(orderRef);
+      await withTimeout((0, import_firestore.updateDoc)(orderRef, updates));
+      const orderSnap = await withTimeout((0, import_firestore.getDoc)(orderRef));
       return { id: orderSnap.id, ...orderSnap.data() };
     } catch (e) {
       console.error("[Database] Error updating order in Firestore, falling back:", e);
@@ -274,7 +297,7 @@ async function updateOrder(orderId, updates) {
 async function createTransaction(tx) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await (0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "transactions", tx.id), tx);
+      await withTimeout((0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "transactions", tx.id), tx));
       return;
     } catch (e) {
       console.error("[Database] Error creating transaction in Firestore, falling back:", e);
@@ -288,7 +311,7 @@ async function getUserTransactions(userId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = (0, import_firestore.query)((0, import_firestore.collection)(firestoreDb, "transactions"), (0, import_firestore.where)("userId", "==", userId));
-      const querySnap = await (0, import_firestore.getDocs)(q);
+      const querySnap = await withTimeout((0, import_firestore.getDocs)(q));
       const txs = querySnap.docs.map((doc2) => ({ id: doc2.id, ...doc2.data() }));
       return txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
@@ -301,7 +324,7 @@ async function getUserTransactions(userId) {
 async function createRedeemedGift(gift) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await (0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "redeemedGifts", gift.id), gift);
+      await withTimeout((0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "redeemedGifts", gift.id), gift));
       return;
     } catch (e) {
       console.error("[Database] Error creating redeemed gift in Firestore, falling back:", e);
@@ -316,7 +339,7 @@ async function getUserRedeemedGifts(userId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = (0, import_firestore.query)((0, import_firestore.collection)(firestoreDb, "redeemedGifts"), (0, import_firestore.where)("userId", "==", userId));
-      const querySnap = await (0, import_firestore.getDocs)(q);
+      const querySnap = await withTimeout((0, import_firestore.getDocs)(q));
       const gifts = querySnap.docs.map((doc2) => ({ id: doc2.id, ...doc2.data() }));
       return gifts.sort((a, b) => new Date(b.redeemedDate).getTime() - new Date(a.redeemedDate).getTime());
     } catch (e) {
@@ -330,7 +353,7 @@ async function getRedeemedGift(giftId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const giftRef = (0, import_firestore.doc)(firestoreDb, "redeemedGifts", giftId);
-      const giftSnap = await (0, import_firestore.getDoc)(giftRef);
+      const giftSnap = await withTimeout((0, import_firestore.getDoc)(giftRef));
       if (giftSnap.exists()) {
         return { id: giftSnap.id, ...giftSnap.data() };
       }
@@ -346,8 +369,8 @@ async function updateRedeemedGift(giftId, updates) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const giftRef = (0, import_firestore.doc)(firestoreDb, "redeemedGifts", giftId);
-      await (0, import_firestore.updateDoc)(giftRef, updates);
-      const giftSnap = await (0, import_firestore.getDoc)(giftRef);
+      await withTimeout((0, import_firestore.updateDoc)(giftRef, updates));
+      const giftSnap = await withTimeout((0, import_firestore.getDoc)(giftRef));
       return { id: giftSnap.id, ...giftSnap.data() };
     } catch (e) {
       console.error("[Database] Error updating redeemed gift in Firestore, falling back:", e);
@@ -367,7 +390,7 @@ async function getUserNotifications(userId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const q = (0, import_firestore.query)((0, import_firestore.collection)(firestoreDb, "notifications"), (0, import_firestore.where)("userId", "==", userId));
-      const querySnap = await (0, import_firestore.getDocs)(q);
+      const querySnap = await withTimeout((0, import_firestore.getDocs)(q));
       const notifs = querySnap.docs.map((doc2) => ({ id: doc2.id, ...doc2.data() }));
       return notifs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
@@ -380,7 +403,7 @@ async function getUserNotifications(userId) {
 async function createNotification(notification) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await (0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "notifications", notification.id), notification);
+      await withTimeout((0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "notifications", notification.id), notification));
       return;
     } catch (e) {
       console.error("[Database] Error creating notification in Firestore, falling back:", e);
@@ -395,7 +418,7 @@ async function markNotificationRead(notificationId, userId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const ref = (0, import_firestore.doc)(firestoreDb, "notifications", notificationId);
-      await (0, import_firestore.updateDoc)(ref, { isRead: true });
+      await withTimeout((0, import_firestore.updateDoc)(ref, { isRead: true }));
       return;
     } catch (e) {
       console.error("[Database] Error marking notification read in Firestore, falling back:", e);
@@ -413,7 +436,7 @@ async function getTransaction(txId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const txRef = (0, import_firestore.doc)(firestoreDb, "transactions", txId);
-      const txSnap = await (0, import_firestore.getDoc)(txRef);
+      const txSnap = await withTimeout((0, import_firestore.getDoc)(txRef));
       if (txSnap.exists()) {
         return { id: txSnap.id, ...txSnap.data() };
       }
@@ -429,8 +452,8 @@ async function updateTransaction(txId, updates) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
       const txRef = (0, import_firestore.doc)(firestoreDb, "transactions", txId);
-      await (0, import_firestore.updateDoc)(txRef, updates);
-      const txSnap = await (0, import_firestore.getDoc)(txRef);
+      await withTimeout((0, import_firestore.updateDoc)(txRef, updates));
+      const txSnap = await withTimeout((0, import_firestore.getDoc)(txRef));
       return { id: txSnap.id, ...txSnap.data() };
     } catch (e) {
       console.error("[Database] Error updating transaction in Firestore:", e);
@@ -453,8 +476,8 @@ async function markAllNotificationsRead(userId) {
         (0, import_firestore.where)("userId", "==", userId),
         (0, import_firestore.where)("isRead", "==", false)
       );
-      const querySnap = await (0, import_firestore.getDocs)(q);
-      const promises = querySnap.docs.map((d) => (0, import_firestore.updateDoc)((0, import_firestore.doc)(firestoreDb, "notifications", d.id), { isRead: true }));
+      const querySnap = await withTimeout((0, import_firestore.getDocs)(q));
+      const promises = querySnap.docs.map((d) => withTimeout((0, import_firestore.updateDoc)((0, import_firestore.doc)(firestoreDb, "notifications", d.id), { isRead: true })));
       await Promise.all(promises);
       return;
     } catch (e) {
@@ -473,7 +496,7 @@ async function markAllNotificationsRead(userId) {
 async function deleteNotification(notificationId, userId) {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      await (0, import_firestore.deleteDoc)((0, import_firestore.doc)(firestoreDb, "notifications", notificationId));
+      await withTimeout((0, import_firestore.deleteDoc)((0, import_firestore.doc)(firestoreDb, "notifications", notificationId)));
       return;
     } catch (e) {
       console.error("[Database] Error deleting notification in Firestore, falling back:", e);
@@ -487,7 +510,7 @@ async function deleteNotification(notificationId, userId) {
 async function getAllUsers() {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      const querySnap = await (0, import_firestore.getDocs)((0, import_firestore.collection)(firestoreDb, "users"));
+      const querySnap = await withTimeout((0, import_firestore.getDocs)((0, import_firestore.collection)(firestoreDb, "users")));
       return querySnap.docs.map((doc2) => ({ id: doc2.id, ...doc2.data() }));
     } catch (e) {
       console.error("[Database] Error getting all users from Firestore, falling back:", e);
@@ -499,7 +522,7 @@ async function getAllUsers() {
 async function getAllOrdersGlobal() {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      const querySnap = await (0, import_firestore.getDocs)((0, import_firestore.collection)(firestoreDb, "orders"));
+      const querySnap = await withTimeout((0, import_firestore.getDocs)((0, import_firestore.collection)(firestoreDb, "orders")));
       const orders = querySnap.docs.map((doc2) => ({ id: doc2.id, ...doc2.data() }));
       return orders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
@@ -512,7 +535,7 @@ async function getAllOrdersGlobal() {
 async function getAllTransactionsGlobal() {
   if (isFirebaseAvailable && firestoreDb) {
     try {
-      const querySnap = await (0, import_firestore.getDocs)((0, import_firestore.collection)(firestoreDb, "transactions"));
+      const querySnap = await withTimeout((0, import_firestore.getDocs)((0, import_firestore.collection)(firestoreDb, "transactions")));
       const txs = querySnap.docs.map((doc2) => ({ id: doc2.id, ...doc2.data() }));
       return txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (e) {
@@ -521,6 +544,33 @@ async function getAllTransactionsGlobal() {
   }
   const db = readLocalDb();
   return db.transactions;
+}
+async function createEducationConsultation(consultation) {
+  if (isFirebaseAvailable && firestoreDb) {
+    try {
+      await withTimeout((0, import_firestore.setDoc)((0, import_firestore.doc)(firestoreDb, "educationConsultations", consultation.id), consultation));
+      return;
+    } catch (e) {
+      console.error("[Database] Error creating education consultation in Firestore, falling back:", e);
+    }
+  }
+  const db = readLocalDb();
+  if (!db.educationConsultations) db.educationConsultations = [];
+  db.educationConsultations.push(consultation);
+  writeLocalDb(db);
+}
+async function getAllEducationConsultationsGlobal() {
+  if (isFirebaseAvailable && firestoreDb) {
+    try {
+      const querySnap = await withTimeout((0, import_firestore.getDocs)((0, import_firestore.collection)(firestoreDb, "educationConsultations")));
+      const consultations = querySnap.docs.map((doc2) => ({ id: doc2.id, ...doc2.data() }));
+      return consultations.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } catch (e) {
+      console.error("[Database] Error getting all education consultations from Firestore, falling back:", e);
+    }
+  }
+  const db = readLocalDb();
+  return db.educationConsultations || [];
 }
 
 // src/api/sse.ts
@@ -2240,10 +2290,55 @@ router8.post("/seed-data", async (req, res) => {
     res.status(500).json({ error: "L\u1ED7i h\u1EC7 th\u1ED1ng trong qu\xE1 tr\xECnh t\u1EA1o d\u1EEF li\u1EC7u l\u1EDBn gi\u1EA3 l\u1EADp." });
   }
 });
+router8.get("/education-consultations", async (req, res) => {
+  try {
+    const consultations = await getAllEducationConsultationsGlobal();
+    res.json(consultations);
+  } catch (error) {
+    console.error("Get education consultations error:", error);
+    res.status(500).json({ error: "L\u1ED7i h\u1EC7 th\u1ED1ng l\u1EA5y danh s\xE1ch \u0111\u0103ng k\xFD." });
+  }
+});
 var admin_default = router8;
 
+// src/api/education.ts
+var import_express9 = __toESM(require("express"), 1);
+var router9 = import_express9.default.Router();
+router9.post("/register", async (req, res) => {
+  let { name, email, phone } = req.body;
+  if (typeof name !== "string" || typeof email !== "string" || typeof phone !== "string") {
+    return res.status(400).json({ error: "D\u1EEF li\u1EC7u \u0111\u0103ng k\xFD kh\xF4ng h\u1EE3p l\u1EC7! Vui l\xF2ng nh\u1EADp \u0111\u1EA7y \u0111\u1EE7." });
+  }
+  name = name.trim();
+  email = email.trim().toLowerCase();
+  phone = phone.trim();
+  if (!name || !email || !phone) {
+    return res.status(400).json({ error: "Vui l\xF2ng \u0111i\u1EC1n \u0111\u1EA7y \u0111\u1EE7 t\u1EA5t c\u1EA3 c\xE1c th\xF4ng tin!" });
+  }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({ error: "\u0110\u1ECBa ch\u1EC9 email kh\xF4ng h\u1EE3p l\u1EC7!" });
+  }
+  try {
+    const newConsultation = {
+      id: `edu-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+      name,
+      email,
+      phone,
+      createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+      status: "pending"
+    };
+    await createEducationConsultation(newConsultation);
+    res.json({ success: true, message: "\u0110\u0103ng k\xFD nh\u1EADn t\u01B0 v\u1EA5n du h\u1ECDc H\xE0n Qu\u1ED1c th\xE0nh c\xF4ng! \u0110\u1ED9i ng\u0169 Mellodi & J2H2 Global s\u1EBD li\xEAn h\u1EC7 v\u1EDBi b\u1EA1n trong th\u1EDDi gian s\u1EDBm nh\u1EA5t." });
+  } catch (error) {
+    console.error("Education registration error:", error);
+    res.status(500).json({ error: "L\u1ED7i h\u1EC7 th\u1ED1ng \u0111\u0103ng k\xFD nh\u1EADn t\u01B0 v\u1EA5n." });
+  }
+});
+var education_default = router9;
+
 // src/api/index.ts
-var apiRouter = import_express9.default.Router();
+var apiRouter = import_express10.default.Router();
 apiRouter.use("/auth", auth_default);
 apiRouter.use("/wallet", wallet_default);
 apiRouter.use("/orders", orders_default);
@@ -2252,12 +2347,22 @@ apiRouter.use("/notifications", notifications_default);
 apiRouter.use("/users", users_default);
 apiRouter.use("/payment", webhook_default);
 apiRouter.use("/admin", admin_default);
+apiRouter.use("/education", education_default);
 var api_default = apiRouter;
 
 // server.ts
-var app = (0, import_express10.default)();
+var app = (0, import_express11.default)();
 var PORT = 3e3;
-app.use(import_express10.default.json());
+app.use(import_express11.default.json());
+app.use((req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", time: (/* @__PURE__ */ new Date()).toISOString() });
 });
@@ -2283,14 +2388,15 @@ data: ${JSON.stringify({ status: "connected" })}
 app.use("/api", api_default);
 async function initServer() {
   if (process.env.NODE_ENV !== "production") {
-    const vite = await (0, import_vite.createServer)({
+    const { createServer: createViteServer } = await import("vite");
+    const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa"
     });
     app.use(vite.middlewares);
   } else {
     const distPath = import_path2.default.join(process.cwd(), "dist");
-    app.use(import_express10.default.static(distPath));
+    app.use(import_express11.default.static(distPath));
     app.get("*", (req, res) => {
       res.sendFile(import_path2.default.join(distPath, "index.html"));
     });

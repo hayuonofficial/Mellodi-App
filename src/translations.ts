@@ -276,6 +276,20 @@ export const translations: Record<Language, Record<string, string>> = {
     'landing.contact.hours.weekend': 'Ngày lễ, Tết: Mở cửa 24/7',
     'landing.contact.hours.note': '*Mellodi hỗ trợ giao hàng miễn phí trong bán kính 3km đối với hội viên hạng Green và Gold đặt nước trực tiếp trên App di động.',
     'landing.footer.text': '© 2026 Mellodi. Tất cả quyền lợi được bảo lưu. Thiết kế và vận hành bởi bộ phận CRM.',
+    
+    // Study Abroad Section
+    'landing.education.title': 'Dự Án Du Học Hàn Quốc',
+    'landing.education.subtitle': 'Từ những trải nghiệm mỗi ngày đến những cơ hội cho tương lai.',
+    'landing.education.desc': 'Mellodi không chỉ mang đến những giai điệu tinh tế trên từng hạt cà phê chất lượng mà còn xây dựng một hệ sinh thái kết nối con người với những giá trị bền vững. Dự án Du học Hàn Quốc là một phần trong định hướng đó, được phát triển cùng các đối tác giáo dục uy tín nhằm cung cấp thông tin chính thống, lộ trình học tập minh bạch và cơ hội phát triển trong môi trường quốc tế.',
+    'landing.education.quote': 'Chúng tôi tin rằng, mỗi hành trình lớn đều bắt đầu từ một cơ hội đúng đắn.',
+    'landing.education.btn': 'Tìm hiểu thêm',
+    'landing.education.modal.title': 'Đăng Ký Tư Vấn Du Học',
+    'landing.education.modal.subtitle': 'Để lại thông tin dưới đây, đội ngũ chuyên viên của Mellodi & J2H2 Global sẽ liên hệ hỗ trợ lộ trình chi tiết cho bạn.',
+    'landing.education.form.name': 'Họ và tên',
+    'landing.education.form.email': 'Gmail',
+    'landing.education.form.phone': 'Số điện thoại',
+    'landing.education.form.submit': 'Nhận Tư Vấn Miễn Phí',
+    'landing.education.form.submitting': 'Đang gửi thông tin...',
 
     // App Download Gate
     'gate.back': 'Quay lại trang giới thiệu',
@@ -575,6 +589,20 @@ export const translations: Record<Language, Record<string, string>> = {
     'landing.contact.hours.weekend': 'Holidays: Open 24/7',
     'landing.contact.hours.note': '*Mellodi supports free delivery within a 3km radius for Green and Gold members ordering directly on the mobile app.',
     'landing.footer.text': '© 2026 Mellodi. All rights reserved. Designed and operated by CRM Division.',
+    
+    // Study Abroad Section
+    'landing.education.title': 'Korea Study Abroad Project',
+    'landing.education.subtitle': 'From daily experiences to opportunities for the future.',
+    'landing.education.desc': 'Mellodi not only brings exquisite melodies in every quality coffee bean but also builds an ecosystem connecting people with sustainable values. The Korea Study Abroad Project is part of that vision, developed with prestigious educational partners to provide official information, transparent learning paths, and development opportunities in an international environment.',
+    'landing.education.quote': 'We believe that every great journey begins with the right opportunity.',
+    'landing.education.btn': 'Learn More',
+    'landing.education.modal.title': 'Register for Study Abroad Consultation',
+    'landing.education.modal.subtitle': 'Leave your details below, and the specialist team from Mellodi & J2H2 Global will contact you to support your detailed path.',
+    'landing.education.form.name': 'Full Name',
+    'landing.education.form.email': 'Email Address',
+    'landing.education.form.phone': 'Phone Number',
+    'landing.education.form.submit': 'Get Free Consultation',
+    'landing.education.form.submitting': 'Submitting...',
 
     // App Download Gate
     'gate.back': 'Back to Brand Page',
@@ -874,6 +902,20 @@ export const translations: Record<Language, Record<string, string>> = {
     'landing.contact.hours.weekend': '공휴일: 24/7 연중무휴',
     'landing.contact.hours.note': '*Mellodi는 모바일 앱에서 직접 주문하는 그린 및 골드 회원을 위해 반경 3km 이내 무료 배달을 지원합니다.',
     'landing.footer.text': '© 2026 멜로디. All rights reserved. Designed and operated by CRM Division.',
+    
+    // Study Abroad Section
+    'landing.education.title': '한국 유학 프로젝트',
+    'landing.education.subtitle': '매일의 경험에서 미래를 위한 기회로.',
+    'landing.education.desc': '멜로디는 최고급 원두로 정성스럽게 내린 커피를 제공할 뿐만 아니라, 사람과 지속 가능한 가치를 연결하는 생태계를 구축하고 있습니다. 한국 유학 프로젝트는 이러한 비전의 일환으로, 신뢰할 수 있는 교육 파트너들과 협력하여 공신력 있는 정보, 투명한 학습 경로, 글로벌 환경에서의 성장 기회를 제공하기 위해 개발되었습니다.',
+    'landing.education.quote': '우리는 모든 위대한 여정이 올바른 기회에서 시작된다고 믿습니다.',
+    'landing.education.btn': '더 알아보기',
+    'landing.education.modal.title': '유학 상담 신청하기',
+    'landing.education.modal.subtitle': '아래에 정보를 남겨주시면 Mellodi 및 J2H2 Global의 전문 상담 팀이 상세한 유학 경로 설정을 지원하기 위해 연락드리겠습니다.',
+    'landing.education.form.name': '성함',
+    'landing.education.form.email': '이메일 주소',
+    'landing.education.form.phone': '전화번호',
+    'landing.education.form.submit': '무료 상담 받기',
+    'landing.education.form.submitting': '제출 중...',
 
     // App Download Gate
     'gate.back': '브랜드 페이지로 돌아가기',

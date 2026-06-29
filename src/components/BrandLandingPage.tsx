@@ -487,19 +487,6 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                       alt="Study Abroad in South Korea" 
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
-                    {/* Glassmorphism Badge */}
-                    <div className="absolute bottom-4 left-4 right-4 bg-stone-950/45 backdrop-blur-md border border-white/15 rounded-xl p-3 flex justify-between items-center text-white">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 rounded-full bg-red-500/20 flex items-center justify-center text-xs">🇰🇷</div>
-                        <div>
-                          <span className="text-[9px] text-white/80 block font-semibold uppercase tracking-wider">Mellodi Global</span>
-                          <span className="text-xs font-bold block">Du học & Trải nghiệm</span>
-                        </div>
-                      </div>
-                      <div className="px-3 py-1 bg-amber-400 text-stone-900 text-[9px] font-bold rounded-full uppercase tracking-wider font-semibold">
-                        Đối Tác Uy Tín
-                      </div>
-                    </div>
                   </motion.div>
                 </div>
 
@@ -511,19 +498,19 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                       <span>Beyond Coffee, Beyond Possibilities</span>
                     </span>
                     <h2 className="font-serif text-2xl sm:text-3xl font-black text-coffee-950 leading-tight">
-                      Dự Án Du Học Hàn Quốc
+                      {translations[language]['landing.education.title']}
                     </h2>
                     <p className="text-xs font-bold text-[#A37B45] italic">
-                      "Từ những trải nghiệm mỗi ngày đến những cơ hội cho tương lai."
+                      "{translations[language]['landing.education.subtitle']}"
                     </p>
                   </div>
 
                   <p className="text-xs text-stone-600 leading-relaxed font-medium">
-                    Mellodi không chỉ mang đến những giai điệu tinh tế trên từng hạt cà phê chất lượng mà còn xây dựng một hệ sinh thái kết nối con người với những giá trị bền vững. Dự án Du học Hàn Quốc là một phần trong định hướng đó, được phát triển cùng các đối tác giáo dục uy tín nhằm cung cấp thông tin chính thống, lộ trình học tập minh bạch và cơ hội phát triển trong môi trường quốc tế.
+                    {translations[language]['landing.education.desc']}
                   </p>
 
                   <div className="border-l-2 border-amber-400 pl-4 py-1 italic text-[11px] text-stone-500 font-medium">
-                    "Chúng tôi tin rằng, mỗi hành trình lớn đều bắt đầu từ một cơ hội đúng đắn."
+                    "{translations[language]['landing.education.quote']}"
                   </div>
 
                   <div className="pt-2">
@@ -531,7 +518,7 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                       onClick={() => setIsStudyModalOpen(true)}
                       className="group inline-flex items-center space-x-3 px-6 py-3 bg-[#4E342E] hover:bg-[#3E2723] text-white text-xs font-bold rounded-xl transition-all shadow-md hover:shadow-lg active:scale-98 cursor-pointer"
                     >
-                      <span>Tìm hiểu thêm</span>
+                      <span>{translations[language]['landing.education.btn']}</span>
                       <span className="transition-transform duration-300 group-hover:translate-x-2">{"----->"}</span>
                     </button>
                   </div>
@@ -1261,27 +1248,33 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                     <GraduationCap className="w-3.5 h-3.5" />
                     <span>Mellodi Education & J2H2 Global</span>
                   </span>
-                  <h3 className="font-serif text-lg font-bold text-coffee-950">Đăng Ký Tư Vấn Du Học</h3>
+                  <h3 className="font-serif text-lg font-bold text-coffee-950">
+                    {translations[language]['landing.education.modal.title']}
+                  </h3>
                   <p className="text-[11px] text-stone-500 leading-normal">
-                    Để lại thông tin dưới đây, đội ngũ chuyên viên của Mellodi & J2H2 Global sẽ liên hệ hỗ trợ lộ trình chi tiết cho bạn.
+                    {translations[language]['landing.education.modal.subtitle']}
                   </p>
                 </div>
 
                 <form onSubmit={handleStudySubmit} className="space-y-4">
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Họ và tên</label>
+                    <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
+                      {translations[language]['landing.education.form.name']}
+                    </label>
                     <input
                       type="text"
                       required
                       value={studyForm.name}
                       onChange={(e) => setStudyForm({ ...studyForm, name: e.target.value })}
-                      placeholder="Nguyễn Văn A"
+                      placeholder={language === 'vi' ? 'Nguyễn Văn A' : language === 'ko' ? '홍길동' : 'John Doe'}
                       className="w-full px-4 py-3 bg-[#FAF9F6] border border-coffee-100 rounded-xl text-xs font-semibold focus:outline-hidden focus:border-amber-400 transition-colors text-stone-900"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Gmail</label>
+                    <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
+                      {translations[language]['landing.education.form.email']}
+                    </label>
                     <input
                       type="email"
                       required
@@ -1293,7 +1286,9 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">Số điện thoại</label>
+                    <label className="text-[10px] font-bold text-stone-600 uppercase tracking-wider block">
+                      {translations[language]['landing.education.form.phone']}
+                    </label>
                     <input
                       type="tel"
                       required
@@ -1316,10 +1311,10 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                     className="w-full py-3 bg-amber-450 hover:bg-amber-500 disabled:bg-stone-200 disabled:text-stone-400 text-[#3E2723] text-xs font-bold rounded-xl transition-all shadow-md active:scale-98 flex items-center justify-center space-x-2 cursor-pointer"
                   >
                     {isStudySubmitting ? (
-                      <span>Đang gửi thông tin...</span>
+                      <span>{translations[language]['landing.education.form.submitting']}</span>
                     ) : (
                       <>
-                        <span>Nhận Tư Vấn Miễn Phí</span>
+                        <span>{translations[language]['landing.education.form.submit']}</span>
                         <Send className="w-3.5 h-3.5" />
                       </>
                     )}
