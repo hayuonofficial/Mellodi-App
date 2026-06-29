@@ -1,6 +1,5 @@
 import express from "express";
 import path from "path";
-import { createServer as createViteServer } from "vite";
 import apiRouter from "./src/api";
 import { addClient, removeClient } from "./src/api/sse";
 
@@ -55,6 +54,7 @@ app.use("/api", apiRouter);
 // Initialize Vite or serve static production files
 async function initServer() {
   if (process.env.NODE_ENV !== "production") {
+    const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",

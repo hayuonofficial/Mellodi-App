@@ -16,12 +16,26 @@ import path from "path";
 
 // Helper to wrap Firestore operations with a timeout to prevent hanging when offline or blocked
 async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 3500): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<never>((_, reject) => 
-      setTimeout(() => reject(new Error("Firestore operation timeout")), timeoutMs)
-    )
-  ]);
+  let timeoutId: NodeJS.Timeout;
+  
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error("Firestore operation timeout")), timeoutMs);
+  });
+
+  // Attach a catch handler to the original promise to prevent unhandled rejections
+  // if the timeout happens first.
+  promise.catch((err) => {
+    console.warn("[Database] Background Firestore operation failed or timed out:", err.message || err);
+  });
+
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutId!);
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId!);
+    throw error;
+  }
 }
 
 // Support both Cloud Firestore (production/connected environment) and local JSON (development/offline environment)
