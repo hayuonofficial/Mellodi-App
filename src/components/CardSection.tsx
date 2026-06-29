@@ -307,9 +307,46 @@ export const CardSection: React.FC = () => {
 
       </div>
 
-      {/* RIGHT COLUMN: WALLET TOPUP & CONVERT LEN POINTS */}
-      <div className="lg:col-span-5 bg-white rounded-2xl border border-coffee-100 shadow-md p-6">
-        
+      {/* RIGHT COLUMN: WALLET TOPUP & CONVERT LEN POINTS (hidden for admin/manager) */}
+      {currentUser?.role === 'admin' || currentUser?.role === 'manager' ? (
+        <div className="lg:col-span-5 bg-white rounded-2xl border border-coffee-100 shadow-md p-6 flex flex-col items-center justify-center space-y-5 text-center min-h-[300px]">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2D5A47] to-[#1E3F31] flex items-center justify-center shadow-lg">
+            <ShieldCheck className="w-8 h-8 text-white" />
+          </div>
+          <div>
+            <h3 className="font-serif text-lg font-bold text-coffee-950">
+              {language === 'vi' ? 'Tài khoản Quản Trị Viên' : language === 'ko' ? '관리자 계정' : 'Administrator Account'}
+            </h3>
+            <p className="text-xs text-stone-500 mt-1.5 leading-relaxed max-w-xs">
+              {language === 'vi'
+                ? 'Tài khoản quản trị không tích điểm LEN hay nạp ví. Vui lòng truy cập tab Quản Trị CRM để quản lý khách hàng và hệ thống.'
+                : language === 'ko'
+                ? '관리자 계정은 LEN 포인트를 적립하거나 지갑을 충전하지 않습니다. CRM 관리 탭에서 고객 및 시스템을 관리하세요.'
+                : 'Admin accounts do not earn LEN points or top up wallets. Please visit the CRM Admin tab to manage customers and the system.'}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 w-full">
+            <div className="px-4 py-2.5 bg-stone-50 rounded-xl border border-stone-100 text-left">
+              <span className="text-[10px] text-stone-400 block uppercase font-bold tracking-wider">
+                {language === 'vi' ? 'Quyền hạn tài khoản' : 'Account Permissions'}
+              </span>
+              <div className="mt-1.5 space-y-1">
+                {[
+                  language === 'vi' ? '✅ Quản lý toàn bộ khách hàng' : '✅ Full customer management',
+                  language === 'vi' ? '✅ Cấp / thu hồi thẻ NFC' : '✅ Issue / revoke NFC cards',
+                  language === 'vi' ? '✅ Phân quyền tài khoản thành viên' : '✅ Assign member roles',
+                  language === 'vi' ? '✅ Chỉnh sửa thực đơn & giá bán' : '✅ Edit menu & pricing',
+                  language === 'vi' ? '✅ Xem phân tích doanh thu' : '✅ View revenue analytics',
+                  language === 'vi' ? '❌ Không tích điểm LEN' : '❌ No LEN point accumulation',
+                ].map((item, i) => (
+                  <p key={i} className="text-[11px] text-stone-700 font-semibold">{item}</p>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="lg:col-span-5 bg-white rounded-2xl border border-coffee-100 shadow-md p-6">
         {/* Toggle Controls */}
         <div className="flex bg-[#F3F0ED] p-1 rounded-xl mb-6">
           <button
@@ -481,6 +518,7 @@ export const CardSection: React.FC = () => {
         )}
 
       </div>
+      )}
 
       {/* BANK TRANSFER & GATEWAY SIMULATION MODAL */}
       <AnimatePresence>

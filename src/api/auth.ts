@@ -137,8 +137,8 @@ router.post("/login", async (req, res) => {
           email: "admin@mellodi.com",
           phone: "0123456789",
           password: newHashedPassword,
-          walletBalance: 1000000,
-          lenPoints: 300000,
+          walletBalance: 0,
+          lenPoints: 0,
           tier: "Mellodi Premium",
           role: "admin",
           createdAt: new Date().toISOString()

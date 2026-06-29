@@ -772,6 +772,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!currentUser) {
       return { success: false, message: 'Vui lòng đăng nhập thành viên để đặt hàng!' };
     }
+    // Admin and Manager accounts do not place customer orders or earn loyalty points
+    if (currentUser.role === 'admin' || currentUser.role === 'manager') {
+      return { success: false, message: 'Tài khoản quản trị viên không thể đặt hàng khách hàng. Vui lòng sử dụng tài khoản thành viên.' };
+    }
     if (cart.length === 0) {
       return { success: false, message: 'Giỏ hàng đang trống!' };
     }

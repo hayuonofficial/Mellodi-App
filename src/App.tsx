@@ -68,6 +68,9 @@ function AppContent() {
 
   React.useEffect(() => {
     if (!currentUser) return;
+    // Admin and Manager accounts are NOT subject to the 5-minute auto-logout.
+    // They manage the CRM and may be idle while reviewing data.
+    if (currentUser.role === 'admin' || currentUser.role === 'manager') return;
 
     let timeoutId: NodeJS.Timeout;
 
