@@ -63,8 +63,16 @@ function AppContent() {
   React.useEffect(() => {
     if (currentUser) {
       setShowWebAuthModal(false);
+      // Automatically switch to CRM Admin section on desktop if logged in as admin/manager
+      if (currentUser.role === 'admin' || currentUser.role === 'manager') {
+        setActiveWebSection('admin');
+      }
+    } else {
+      if (activeWebSection === 'admin') {
+        setActiveWebSection('home');
+      }
     }
-  }, [currentUser]);
+  }, [currentUser, activeWebSection]);
 
   React.useEffect(() => {
     if (!currentUser) return;
@@ -475,7 +483,10 @@ function AppContent() {
                 { id: 'space', label: translations[language]['landing.space.tag'] },
                 { id: 'menu', label: translations[language]['landing.menu.tag'] },
                 { id: 'promo', label: translations[language]['landing.promo.tag'] },
-                { id: 'membership', label: language === 'vi' ? 'Thành viên' : language === 'ko' ? '멤버십' : 'Membership' }
+                { id: 'membership', label: language === 'vi' ? 'Thành viên' : language === 'ko' ? '멤버십' : 'Membership' },
+                ...(currentUser && (currentUser.role === 'admin' || currentUser.role === 'manager') ? [
+                  { id: 'admin', label: language === 'vi' ? 'Quản trị CRM' : language === 'ko' ? 'CRM 관리' : 'CRM Admin' }
+                ] : [])
               ].map((item) => (
                 <button
                   key={item.id}
@@ -561,9 +572,15 @@ function AppContent() {
           </div>
         </header>
 
-        {/* Brand Landing Page */}
+        {/* Brand Landing Page / Admin Dashboard */}
         <main className="flex-grow">
-          <BrandLandingPage activeSection={activeWebSection} onOpenApp={() => setShowDownloadGate(true)} />
+          {activeWebSection === 'admin' && (currentUser?.role === 'admin' || currentUser?.role === 'manager') ? (
+            <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+              <AdminDashboard />
+            </div>
+          ) : (
+            <BrandLandingPage activeSection={activeWebSection} onOpenApp={() => setShowDownloadGate(true)} />
+          )}
         </main>
 
         {/* Global Web AI Chatbot */}
