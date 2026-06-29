@@ -466,4 +466,37 @@ router.delete("/products/:id", async (req, res) => {
   }
 });
 
+// API: Admin - Toggle NFC Card Status (Active / Suspended)
+router.post("/nfc/toggle-status", async (req, res) => {
+  const { userId, cardId, status } = req.body;
+
+  if (!userId || !cardId || !status) {
+    return res.status(400).json({ error: "Thiếu thông tin người dùng, ID thẻ hoặc trạng thái mới!" });
+  }
+
+  if (!["active", "suspended"].includes(status)) {
+    return res.status(400).json({ error: "Trạng thái thẻ không hợp lệ!" });
+  }
+
+  try {
+    const user = await getUser(userId);
+    if (!user || !user.nfcCard || user.nfcCard.cardId !== cardId) {
+      return res.status(404).json({ error: "Không tìm thấy thông tin thẻ NFC liên kết với thành viên này!" });
+    }
+
+    // Update only the status inside the nfcCard object
+    const updatedUser = await updateUser(userId, {
+      nfcCard: {
+        ...user.nfcCard,
+        status: status as 'active' | 'suspended'
+      }
+    });
+
+    res.json({ success: true, user: updatedUser });
+  } catch (error) {
+    console.error("Toggle NFC status error:", error);
+    res.status(500).json({ error: "Lỗi hệ thống khi thay đổi trạng thái thẻ." });
+  }
+});
+
 export default router;

@@ -1386,6 +1386,75 @@ export const AdminDashboard: React.FC = () => {
                           </div>
                         </div>
                       )}
+
+                      {/* NFC Card Status Management */}
+                      {customerDetail.user.nfcCard && (
+                        <div className="pt-4 border-t border-stone-100 space-y-2">
+                          <label className="text-[10px] font-bold text-[#4E342E] uppercase tracking-wider block">Quản lý trạng thái Thẻ NFC</label>
+                          <div className="flex items-center justify-between bg-stone-50 p-3 rounded-2xl border border-stone-200/40">
+                            <div>
+                              <span className="text-[10px] text-stone-400 block font-mono">UID: {customerDetail.user.nfcCard.cardId}</span>
+                              <div className="flex items-center space-x-1.5 mt-1">
+                                <span className={`inline-block w-2 h-2 rounded-full ${customerDetail.user.nfcCard.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
+                                <span className="text-xs font-bold text-stone-700">
+                                  {customerDetail.user.nfcCard.status === 'active' ? 'Đang hoạt động (Active)' : 'Đã khóa tạm thời (Suspended)'}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                const newStatus = customerDetail.user.nfcCard!.status === 'active' ? 'suspended' : 'active';
+                                const confirmMsg = newStatus === 'suspended' 
+                                  ? 'Bạn có chắc chắn muốn KHÓA TẠM THỜI thẻ NFC này? Khách hàng sẽ không thể thanh toán bằng thẻ này cho đến khi được mở khóa lại.' 
+                                  : 'Bạn có chắc chắn muốn KÍCH HOẠT LẠI thẻ NFC này?';
+                                
+                                if (!confirm(confirmMsg)) return;
+
+                                try {
+                                  const res = await fetch(`${API_BASE_URL}/api/admin/nfc/toggle-status`, {
+                                    method: 'POST',
+                                    headers: {
+                                      'Content-Type': 'application/json',
+                                      'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+                                    },
+                                    body: JSON.stringify({
+                                      userId: customerDetail.user.id,
+                                      cardId: customerDetail.user.nfcCard!.cardId,
+                                      status: newStatus
+                                    })
+                                  });
+                                  const data = await res.json();
+                                  if (res.ok) {
+                                    alert(newStatus === 'suspended' ? 'Đã khóa thẻ NFC tạm thời thành công!' : 'Đã kích hoạt lại thẻ NFC thành công!');
+                                    // Refresh details
+                                    const detailRes = await fetch(`${API_BASE_URL}/api/admin/customers/${customerDetail.user.id}`, {
+                                      headers: { 'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}` }
+                                    });
+                                    if (detailRes.ok) {
+                                      const detailData = await detailRes.json();
+                                      setCustomerDetail(detailData);
+                                    }
+                                    fetchData(); // Refresh CRM list
+                                  } else {
+                                    alert(data.error);
+                                  }
+                                } catch (err) {
+                                  alert('Lỗi kết nối máy chủ!');
+                                }
+                              }}
+                              className={`px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all cursor-pointer ${
+                                customerDetail.user.nfcCard.status === 'active'
+                                  ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-100'
+                                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-100'
+                              }`}
+                            >
+                              {customerDetail.user.nfcCard.status === 'active' ? 'Khóa thẻ' : 'Mở khóa thẻ'}
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Drink Preferences */}
