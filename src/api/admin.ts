@@ -6,6 +6,7 @@ import {
   createUser,
   createOrder,
   createTransaction,
+  getAllEducationConsultationsGlobal,
   UserRecord,
   OrderRecord,
   TransactionRecord
@@ -353,6 +354,17 @@ router.post("/seed-data", async (req, res) => {
   } catch (err) {
     console.error("Failed to seed database:", err);
     res.status(500).json({ error: "Lỗi hệ thống trong quá trình tạo dữ liệu lớn giả lập." });
+  }
+});
+
+// API: Get all study abroad consultations
+router.get("/education-consultations", async (req, res) => {
+  try {
+    const consultations = await getAllEducationConsultationsGlobal();
+    res.json(consultations);
+  } catch (error) {
+    console.error("Get education consultations error:", error);
+    res.status(500).json({ error: "Lỗi hệ thống lấy danh sách đăng ký." });
   }
 });
 
