@@ -169,6 +169,8 @@ export const CardSection: React.FC = () => {
     }
   };
 
+  const isAdmin = currentUser?.role === 'admin' || currentUser?.role === 'manager';
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       
@@ -307,8 +309,8 @@ export const CardSection: React.FC = () => {
 
       </div>
 
-      {/* RIGHT COLUMN: WALLET TOPUP & CONVERT LEN POINTS (hidden for admin/manager) */}
-      {currentUser?.role === 'admin' || currentUser?.role === 'manager' ? (
+      {/* RIGHT COLUMN: Admin Panel OR Wallet/Points */}
+      {isAdmin ? (
         <div className="lg:col-span-5 bg-white rounded-2xl border border-coffee-100 shadow-md p-6 flex flex-col items-center justify-center space-y-5 text-center min-h-[300px]">
           <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2D5A47] to-[#1E3F31] flex items-center justify-center shadow-lg">
             <ShieldCheck className="w-8 h-8 text-white" />
@@ -325,199 +327,187 @@ export const CardSection: React.FC = () => {
                 : 'Admin accounts do not earn LEN points or top up wallets. Please visit the CRM Admin tab to manage customers and the system.'}
             </p>
           </div>
-          <div className="flex flex-col gap-2 w-full">
-            <div className="px-4 py-2.5 bg-stone-50 rounded-xl border border-stone-100 text-left">
-              <span className="text-[10px] text-stone-400 block uppercase font-bold tracking-wider">
+          <div className="w-full">
+            <div className="px-4 py-3 bg-stone-50 rounded-xl border border-stone-100 text-left space-y-1.5">
+              <span className="text-[10px] text-stone-400 block uppercase font-bold tracking-wider mb-2">
                 {language === 'vi' ? 'Quyền hạn tài khoản' : 'Account Permissions'}
               </span>
-              <div className="mt-1.5 space-y-1">
-                {[
-                  language === 'vi' ? '✅ Quản lý toàn bộ khách hàng' : '✅ Full customer management',
-                  language === 'vi' ? '✅ Cấp / thu hồi thẻ NFC' : '✅ Issue / revoke NFC cards',
-                  language === 'vi' ? '✅ Phân quyền tài khoản thành viên' : '✅ Assign member roles',
-                  language === 'vi' ? '✅ Chỉnh sửa thực đơn & giá bán' : '✅ Edit menu & pricing',
-                  language === 'vi' ? '✅ Xem phân tích doanh thu' : '✅ View revenue analytics',
-                  language === 'vi' ? '❌ Không tích điểm LEN' : '❌ No LEN point accumulation',
-                ].map((item, i) => (
-                  <p key={i} className="text-[11px] text-stone-700 font-semibold">{item}</p>
-                ))}
-              </div>
+              {[
+                language === 'vi' ? '✅ Quản lý toàn bộ khách hàng' : '✅ Full customer management',
+                language === 'vi' ? '✅ Cấp / thu hồi thẻ NFC' : '✅ Issue / revoke NFC cards',
+                language === 'vi' ? '✅ Phân quyền tài khoản thành viên' : '✅ Assign member roles',
+                language === 'vi' ? '✅ Chỉnh sửa thực đơn & giá bán' : '✅ Edit menu & pricing',
+                language === 'vi' ? '✅ Xem phân tích doanh thu' : '✅ View revenue analytics',
+                language === 'vi' ? '❌ Không tích điểm LEN' : '❌ No LEN point accumulation',
+              ].map((item, i) => (
+                <p key={i} className="text-[11px] text-stone-700 font-semibold">{item}</p>
+              ))}
             </div>
           </div>
         </div>
       ) : (
         <div className="lg:col-span-5 bg-white rounded-2xl border border-coffee-100 shadow-md p-6">
-        {/* Toggle Controls */}
-        <div className="flex bg-[#F3F0ED] p-1 rounded-xl mb-6">
-          <button
-            id="tab-topup-wallet"
-            onClick={() => { setActiveTab('topup'); setStatusMessage(null); }}
-            className={`flex-1 py-2.5 text-center text-xs font-bold rounded-lg transition-all duration-300 ${
-              activeTab === 'topup'
-                ? 'bg-white text-coffee-950 shadow-xs'
-                : 'text-stone-500 hover:text-stone-900'
-            }`}
-          >
-            <Wallet className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-[#2D5A47]" />
-            {translations[language]['card.topup']}
-          </button>
-          <button
-            id="tab-buylen-points"
-            onClick={() => { setActiveTab('buylen'); setStatusMessage(null); }}
-            className={`flex-1 py-2.5 text-center text-xs font-bold rounded-lg transition-all duration-300 ${
-              activeTab === 'buylen'
-                ? 'bg-white text-coffee-950 shadow-xs'
-                : 'text-stone-500 hover:text-stone-900'
-            }`}
-          >
-            <RefreshCw className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-[#A37B45]" />
-            {translations[language]['card.buylen']}
-          </button>
-        </div>
 
-        {/* FEEDBACK MESSAGE */}
-        <AnimatePresence mode="wait">
-          {statusMessage && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className={`p-3.5 rounded-xl mb-6 text-xs flex items-start space-x-2 ${
-                statusMessage.type === 'success'
-                  ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
-                  : 'bg-rose-50 text-rose-800 border border-rose-100'
+          {/* Toggle Controls */}
+          <div className="flex bg-[#F3F0ED] p-1 rounded-xl mb-6">
+            <button
+              id="tab-topup-wallet"
+              onClick={() => { setActiveTab('topup'); setStatusMessage(null); }}
+              className={`flex-1 py-2.5 text-center text-xs font-bold rounded-lg transition-all duration-300 ${
+                activeTab === 'topup'
+                  ? 'bg-white text-coffee-950 shadow-xs'
+                  : 'text-stone-500 hover:text-stone-900'
               }`}
             >
-              <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${statusMessage.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}`} />
-              <span>{statusMessage.text}</span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* TOP UP WALLET CONTENT */}
-        {activeTab === 'topup' && (
-          <form onSubmit={handleOpenPayment} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-coffee-950 uppercase tracking-wide mb-1.5">
-                {translations[language]['card.topup']} (VND)
-              </label>
-              
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">đ</span>
-                <input
-                  type="number"
-                  id="wallet-topup-input"
-                  min="20000"
-                  step="10000"
-                  value={topUpAmount}
-                  onChange={(e) => setTopUpAmount(e.target.value)}
-                  className="w-full bg-[#FAF9F6] border border-coffee-200 rounded-xl py-3 pl-8 pr-4 text-sm font-bold text-coffee-950 focus:outline-hidden focus:ring-2 focus:ring-[#2D5A47] focus:border-transparent transition-all outline-none"
-                  placeholder="Nhập số tiền..."
-                />
-              </div>
-            </div>
-
-            {/* Presets */}
-            <div className="grid grid-cols-4 gap-2">
-              {['50000', '100000', '200000', '500000'].map((amt) => (
-                <button
-                  type="button"
-                  key={amt}
-                  id={`preset-topup-${amt}`}
-                  onClick={() => setTopUpAmount(amt)}
-                  className={`py-2 text-[11px] font-bold rounded-lg border transition-all ${
-                    topUpAmount === amt
-                      ? 'bg-[#2D5A47] border-[#2D5A47] text-white shadow-xs'
-                      : 'border-stone-200 text-stone-700 hover:bg-stone-50'
-                  }`}
-                >
-                  {(parseInt(amt, 10) / 1000)}K
-                </button>
-              ))}
-            </div>
-
-            {/* Quick explanation */}
-            <div className="bg-[#FAF9F6] rounded-xl p-3 text-[11px] text-stone-600 flex items-start space-x-2 border border-stone-200/40">
-              <CreditCard className="w-4 h-4 text-[#2D5A47] flex-shrink-0 mt-0.5" />
-              <span>Thanh toán nạp tiền thật an toàn qua mã QR Ngân hàng (VietQR), Thẻ nội địa NAPAS hoặc ví điện tử MoMo.</span>
-            </div>
-
-            <button
-              type="submit"
-              id="btn-submit-topup"
-              className="w-full bg-[#2D5A47] hover:bg-[#1E3F31] text-white font-bold text-xs py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-98 cursor-pointer uppercase tracking-wider"
-            >
-              Tiến hành nạp tiền thật
+              <Wallet className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-[#2D5A47]" />
+              {translations[language]['card.topup']}
             </button>
-          </form>
-        )}
+            <button
+              id="tab-buylen-points"
+              onClick={() => { setActiveTab('buylen'); setStatusMessage(null); }}
+              className={`flex-1 py-2.5 text-center text-xs font-bold rounded-lg transition-all duration-300 ${
+                activeTab === 'buylen'
+                  ? 'bg-white text-coffee-950 shadow-xs'
+                  : 'text-stone-500 hover:text-stone-900'
+              }`}
+            >
+              <RefreshCw className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5 text-[#A37B45]" />
+              {translations[language]['card.buylen']}
+            </button>
+          </div>
 
-        {/* BUY LEN POINTS CONTENT */}
-        {activeTab === 'buylen' && (
-          <form onSubmit={handleBuyPoints} className="space-y-4">
-            <div>
-              <div className="flex justify-between items-center mb-1.5">
-                <label className="block text-xs font-bold text-coffee-950 uppercase tracking-wide">
-                  {translations[language]['card.buylen']}
-                </label>
-                <span className="text-[10px] font-bold text-[#A37B45] bg-[#A37B45]/10 px-2.5 py-0.5 rounded-md border border-[#A37B45]/20">
-                  1,000đ = 1,000 LEN
-                </span>
-              </div>
+          {/* FEEDBACK MESSAGE */}
+          <AnimatePresence mode="wait">
+            {statusMessage && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`p-3.5 rounded-xl mb-6 text-xs flex items-start space-x-2 ${
+                  statusMessage.type === 'success'
+                    ? 'bg-emerald-50 text-emerald-800 border border-emerald-100'
+                    : 'bg-rose-50 text-rose-800 border border-rose-100'
+                }`}
+              >
+                <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${statusMessage.type === 'success' ? 'text-emerald-500' : 'text-rose-500'}`} />
+                <span>{statusMessage.text}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">đ</span>
-                <input
-                  type="number"
-                  id="buylen-points-input"
-                  min="1000"
-                  step="1000"
-                  value={buyPointsAmount}
-                  onChange={(e) => setBuyPointsAmount(e.target.value)}
-                  className="w-full bg-[#FAF9F6] border border-[#E0D7D0] rounded-xl py-3 pl-8 pr-4 text-sm font-bold text-[#4E342E] focus:outline-hidden focus:ring-2 focus:ring-[#A37B45] focus:border-transparent transition-all outline-none"
-                  placeholder={translations[language]['card.buylen.placeholder']}
-                />
-              </div>
-            </div>
-
-            {/* Presets for points buy */}
-            <div className="grid grid-cols-4 gap-2">
-              {['20000', '50000', '100000', '200000'].map((amt) => (
-                <button
-                  type="button"
-                  key={amt}
-                  id={`preset-buylen-${amt}`}
-                  onClick={() => setBuyPointsAmount(amt)}
-                  className={`py-2 text-[11px] font-bold rounded-lg border transition-all ${
-                    buyPointsAmount === amt
-                      ? 'bg-[#A37B45] border-[#A37B45] text-white shadow-xs'
-                      : 'border-stone-200 text-stone-700 hover:bg-stone-50'
-                  }`}
-                >
-                  {(parseInt(amt, 10) / 1000)}K PTS
-                </button>
-              ))}
-            </div>
-
-            <div className="bg-amber-50/40 rounded-xl p-3 text-[11px] text-amber-900 border border-amber-100/50 flex items-start space-x-2">
-              <HelpCircle className="w-3.5 h-3.5 text-amber-700 flex-shrink-0 mt-0.5" />
+          {/* TOP UP WALLET CONTENT */}
+          {activeTab === 'topup' && (
+            <form onSubmit={handleOpenPayment} className="space-y-4">
               <div>
-                <p className="font-semibold">{translations[language]['card.buylen.desc']}</p>
-                <p className="text-[10px] text-stone-500 mt-0.5">Quy đổi số dư ví Mellodi thành điểm LEN thưởng. Điểm LEN được sử dụng vĩnh viễn và có thể thanh toán thay cho tiền mặt tại toàn bộ hệ thống cửa hàng Mellodi.</p>
+                <label className="block text-xs font-bold text-coffee-950 uppercase tracking-wide mb-1.5">
+                  {translations[language]['card.topup']} (VND)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">đ</span>
+                  <input
+                    type="number"
+                    id="wallet-topup-input"
+                    min="20000"
+                    step="10000"
+                    value={topUpAmount}
+                    onChange={(e) => setTopUpAmount(e.target.value)}
+                    className="w-full bg-[#FAF9F6] border border-coffee-200 rounded-xl py-3 pl-8 pr-4 text-sm font-bold text-coffee-950 focus:outline-hidden focus:ring-2 focus:ring-[#2D5A47] focus:border-transparent transition-all outline-none"
+                    placeholder="Nhập số tiền..."
+                  />
+                </div>
               </div>
-            </div>
+              <div className="grid grid-cols-4 gap-2">
+                {['50000', '100000', '200000', '500000'].map((amt) => (
+                  <button
+                    type="button"
+                    key={amt}
+                    id={`preset-topup-${amt}`}
+                    onClick={() => setTopUpAmount(amt)}
+                    className={`py-2 text-[11px] font-bold rounded-lg border transition-all ${
+                      topUpAmount === amt
+                        ? 'bg-[#2D5A47] border-[#2D5A47] text-white shadow-xs'
+                        : 'border-stone-200 text-stone-700 hover:bg-stone-50'
+                    }`}
+                  >
+                    {(parseInt(amt, 10) / 1000)}K
+                  </button>
+                ))}
+              </div>
+              <div className="bg-[#FAF9F6] rounded-xl p-3 text-[11px] text-stone-600 flex items-start space-x-2 border border-stone-200/40">
+                <CreditCard className="w-4 h-4 text-[#2D5A47] flex-shrink-0 mt-0.5" />
+                <span>Thanh toán nạp tiền thật an toàn qua mã QR Ngân hàng (VietQR), Thẻ nội địa NAPAS hoặc ví điện tử MoMo.</span>
+              </div>
+              <button
+                type="submit"
+                id="btn-submit-topup"
+                className="w-full bg-[#2D5A47] hover:bg-[#1E3F31] text-white font-bold text-xs py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-98 cursor-pointer uppercase tracking-wider"
+              >
+                Tiến hành nạp tiền thật
+              </button>
+            </form>
+          )}
 
-            <button
-              type="submit"
-              id="btn-submit-buylen"
-              className="w-full bg-[#A37B45] hover:bg-[#8A5205] text-white font-bold text-xs py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-98 cursor-pointer uppercase tracking-wider"
-            >
-              Quy đổi sang điểm LEN
-            </button>
-          </form>
-        )}
+          {/* BUY LEN POINTS CONTENT */}
+          {activeTab === 'buylen' && (
+            <form onSubmit={handleBuyPoints} className="space-y-4">
+              <div>
+                <div className="flex justify-between items-center mb-1.5">
+                  <label className="block text-xs font-bold text-coffee-950 uppercase tracking-wide">
+                    {translations[language]['card.buylen']}
+                  </label>
+                  <span className="text-[10px] font-bold text-[#A37B45] bg-[#A37B45]/10 px-2.5 py-0.5 rounded-md border border-[#A37B45]/20">
+                    1,000đ = 1,000 LEN
+                  </span>
+                </div>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-stone-400">đ</span>
+                  <input
+                    type="number"
+                    id="buylen-points-input"
+                    min="1000"
+                    step="1000"
+                    value={buyPointsAmount}
+                    onChange={(e) => setBuyPointsAmount(e.target.value)}
+                    className="w-full bg-[#FAF9F6] border border-[#E0D7D0] rounded-xl py-3 pl-8 pr-4 text-sm font-bold text-[#4E342E] focus:outline-hidden focus:ring-2 focus:ring-[#A37B45] focus:border-transparent transition-all outline-none"
+                    placeholder={translations[language]['card.buylen.placeholder']}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {['20000', '50000', '100000', '200000'].map((amt) => (
+                  <button
+                    type="button"
+                    key={amt}
+                    id={`preset-buylen-${amt}`}
+                    onClick={() => setBuyPointsAmount(amt)}
+                    className={`py-2 text-[11px] font-bold rounded-lg border transition-all ${
+                      buyPointsAmount === amt
+                        ? 'bg-[#A37B45] border-[#A37B45] text-white shadow-xs'
+                        : 'border-stone-200 text-stone-700 hover:bg-stone-50'
+                    }`}
+                  >
+                    {(parseInt(amt, 10) / 1000)}K PTS
+                  </button>
+                ))}
+              </div>
+              <div className="bg-amber-50/40 rounded-xl p-3 text-[11px] text-amber-900 border border-amber-100/50 flex items-start space-x-2">
+                <HelpCircle className="w-3.5 h-3.5 text-amber-700 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">{translations[language]['card.buylen.desc']}</p>
+                  <p className="text-[10px] text-stone-500 mt-0.5">Quy đổi số dư ví Mellodi thành điểm LEN thưởng. Điểm LEN được sử dụng vĩnh viễn và có thể thanh toán thay cho tiền mặt tại toàn bộ hệ thống cửa hàng Mellodi.</p>
+                </div>
+              </div>
+              <button
+                type="submit"
+                id="btn-submit-buylen"
+                className="w-full bg-[#A37B45] hover:bg-[#8A5205] text-white font-bold text-xs py-3 rounded-xl transition-all shadow-md hover:shadow-lg active:scale-98 cursor-pointer uppercase tracking-wider"
+              >
+                Quy đổi sang điểm LEN
+              </button>
+            </form>
+          )}
 
-      </div>
+        </div>
       )}
 
       {/* BANK TRANSFER & GATEWAY SIMULATION MODAL */}
