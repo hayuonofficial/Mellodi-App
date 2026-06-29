@@ -37,7 +37,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'card.tier.welcome': 'Mellodi Basic',
     'card.tier.green': 'Mellodi Gold',
     'card.tier.gold': 'Mellodi Premium',
-    'card.topup': 'Nạp ví',
+    'card.topup': 'Nạp tiền vào thẻ',
     'card.buylen': 'Mua điểm LEN',
     'card.buylen.desc': 'Nạp tiền mua điểm LEN: 1.000đ = 1.000 điểm',
     'card.buylen.placeholder': 'Nhập số tiền nạp (VND)',
@@ -274,7 +274,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'landing.contact.hours.title': 'Giờ hoạt động',
     'landing.contact.hours.weekday': 'Thứ 2 - Chủ Nhật: Mở cửa 24/7',
     'landing.contact.hours.weekend': 'Ngày lễ, Tết: Mở cửa 24/7',
-    'landing.contact.hours.note': '*Mellodi hỗ trợ giao hàng miễn phí trong bán kính 3km đối với hội viên hạng Green và Gold đặt nước trực tiếp trên App di động.',
+    'landing.contact.hours.note': '*Mellodi hỗ trợ giao hàng miễn phí trong bán kính 3km đối với hội viên hạng Gold và Premium đặt nước trực tiếp trên App di động.',
     'landing.footer.text': '© 2026 Mellodi. Tất cả quyền lợi được bảo lưu. Thiết kế và vận hành bởi bộ phận CRM.',
     
     // Study Abroad Section
@@ -350,7 +350,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'card.tier.welcome': 'Mellodi Basic',
     'card.tier.green': 'Mellodi Gold',
     'card.tier.gold': 'Mellodi Premium',
-    'card.topup': 'Top Up Wallet',
+    'card.topup': 'Top Up NFC Card',
     'card.buylen': 'Buy LEN Points',
     'card.buylen.desc': 'Convert money to LEN points: 1,000 VND = 1,000 LEN',
     'card.buylen.placeholder': 'Enter top-up amount (VND equivalent)',
@@ -587,7 +587,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'landing.contact.hours.title': 'Operating Hours',
     'landing.contact.hours.weekday': 'Monday - Sunday: Open 24/7',
     'landing.contact.hours.weekend': 'Holidays: Open 24/7',
-    'landing.contact.hours.note': '*Mellodi supports free delivery within a 3km radius for Green and Gold members ordering directly on the mobile app.',
+    'landing.contact.hours.note': '*Mellodi supports free delivery within a 3km radius for Gold and Premium members ordering directly on the mobile app.',
     'landing.footer.text': '© 2026 Mellodi. All rights reserved. Designed and operated by CRM Division.',
     
     // Study Abroad Section
@@ -663,7 +663,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'card.tier.welcome': '멜로디 베이직',
     'card.tier.green': '멜로디 골드',
     'card.tier.gold': '멜로디 프리미엄',
-    'card.topup': '충전하기',
+    'card.topup': 'NFC 카드 충전',
     'card.buylen': 'LEN 포인트 구매',
     'card.buylen.desc': '포인트 구매 비율: 1,000 VND = 1,000 LEN',
     'card.buylen.placeholder': '충전 금액 입력 (VND 상당)',
@@ -900,7 +900,7 @@ export const translations: Record<Language, Record<string, string>> = {
     'landing.contact.hours.title': '영업 시간',
     'landing.contact.hours.weekday': '월요일 - 일요일: 24/7 연중무휴',
     'landing.contact.hours.weekend': '공휴일: 24/7 연중무휴',
-    'landing.contact.hours.note': '*Mellodi는 모바일 앱에서 직접 주문하는 그린 및 골드 회원을 위해 반경 3km 이내 무료 배달을 지원합니다.',
+    'landing.contact.hours.note': '*Mellodi는 모바일 앱에서 직접 주문하는 골드 및 프리미엄 회원을 위해 반경 3km 이내 무료 배달을 지원합니다.',
     'landing.footer.text': '© 2026 멜로디. All rights reserved. Designed and operated by CRM Division.',
     
     // Study Abroad Section
