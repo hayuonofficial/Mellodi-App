@@ -69,10 +69,10 @@ export const AuthPortal: React.FC = () => {
 
 
   return (
-    <div className="max-w-5xl mx-auto bg-white rounded-3xl overflow-hidden border border-coffee-100 shadow-xl grid grid-cols-1 md:grid-cols-12 min-h-[600px]">
+    <div className="max-w-5xl mx-auto bg-white rounded-3xl overflow-hidden border border-coffee-100 shadow-xl grid grid-cols-1 md:grid-cols-12 md:min-h-[600px] w-full">
       
       {/* LEFT COLUMN: BRANDING & MEMBERSHIP BENEFITS */}
-      <div className="md:col-span-5 bg-[#2D5A47] text-white p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden">
+      <div className="hidden md:flex md:col-span-5 bg-[#2D5A47] text-white p-8 sm:p-12 flex-col justify-between relative overflow-hidden">
         {/* Background glow effects */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
         <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#A37B45]/15 rounded-full blur-xl pointer-events-none"></div>
@@ -149,7 +149,7 @@ export const AuthPortal: React.FC = () => {
       </div>
 
       {/* RIGHT COLUMN: REGISTER / LOGIN FORM */}
-      <div className="md:col-span-7 p-8 sm:p-12 flex flex-col justify-center">
+      <div className="md:col-span-7 p-6 sm:p-12 flex flex-col justify-center w-full">
         
         {/* State Toggle Header */}
         <div className="flex items-center space-x-6 border-b border-coffee-100 pb-4 mb-8">

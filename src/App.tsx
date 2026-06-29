@@ -469,8 +469,8 @@ function AppContent() {
 
         {/* Web Auth Modal */}
         {showWebAuthModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-            <div className="bg-white rounded-3xl p-2 max-w-md w-full border border-coffee-100 shadow-2xl relative">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 overflow-y-auto">
+            <div className="bg-white rounded-3xl p-2 max-w-md w-full border border-coffee-100 shadow-2xl relative my-auto">
               <button
                 onClick={() => setShowWebAuthModal(false)}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center transition-colors cursor-pointer z-50"
