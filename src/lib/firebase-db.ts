@@ -30,13 +30,13 @@ export let isFirebaseAvailable = false;
 
 try {
   let firebaseConfig: any = {
-    apiKey: "AIzaSyD0arVTJCiNE3uLR0aRgiAhyKLaykMnR00",
-    authDomain: "mellodi-638a6.firebaseapp.com",
-    projectId: "mellodi-638a6",
-    storageBucket: "mellodi-638a6.firebasestorage.app",
-    messagingSenderId: "670516945218",
-    appId: "1:670516945218:web:14979f45361deda20268db",
-    measurementId: "G-W2SFMBG0YD"
+    apiKey: "AIzaSyDHnlmY5BMs8yps7A0UaVO6WfY33Cbjvg0",
+    authDomain: "mellodidatabase.firebaseapp.com",
+    projectId: "mellodidatabase",
+    storageBucket: "mellodidatabase.firebasestorage.app",
+    messagingSenderId: "762274784498",
+    appId: "1:762274784498:web:1b6fb8f376975069e31c6b",
+    measurementId: "G-SZDNTTJSPS"
   };
 
   // 1. Check if environment variables are set (Standard for production deployments)
