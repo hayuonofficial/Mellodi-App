@@ -1162,6 +1162,140 @@ export const AdminDashboard: React.FC = () => {
                   </div>
 
                 </div>
+
+                {/* Danh sách Thẻ NFC đã phát hành */}
+                <div className="bg-white rounded-3xl border border-coffee-100 shadow-xs p-6 space-y-4 text-left">
+                  <h3 className="font-serif text-sm font-bold text-coffee-950 flex items-center space-x-2">
+                    <CreditCard className="w-4.5 h-4.5 text-[#2D5A47]" />
+                    <span>Danh sách Thẻ NFC Đã Phát Hành ({customers.filter(c => c.nfcCard).length})</span>
+                  </h3>
+                  
+                  <div className="overflow-x-auto border border-stone-100 rounded-2xl">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-stone-50 text-stone-400 font-bold border-b border-stone-100 uppercase tracking-wider">
+                          <th className="p-4">Khách hàng</th>
+                          <th className="p-4">Mã UID Thẻ</th>
+                          <th className="p-4">Ngày cấp</th>
+                          <th className="p-4">Trạng thái</th>
+                          <th className="p-4 text-right">Hành động</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100 font-medium">
+                        {customers.filter(c => c.nfcCard).length > 0 ? (
+                          customers.filter(c => c.nfcCard).map((c) => (
+                            <tr key={c.id} className="hover:bg-stone-50/50 transition-colors">
+                              <td className="p-4">
+                                <p className="font-bold text-coffee-950">{c.name}</p>
+                                <p className="text-[10px] text-stone-400 font-mono">{c.phone}</p>
+                              </td>
+                              <td className="p-4 font-mono font-bold text-stone-700">
+                                {c.nfcCard!.cardId}
+                              </td>
+                              <td className="p-4 text-stone-500">
+                                {c.nfcCard!.linkedAt ? new Date(c.nfcCard!.linkedAt).toLocaleDateString('vi-VN') : 'N/A'}
+                              </td>
+                              <td className="p-4">
+                                <div className="flex items-center space-x-1.5">
+                                  <span className={`inline-block w-2 h-2 rounded-full ${c.nfcCard!.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></span>
+                                  <span className="text-xs font-semibold text-stone-700">
+                                    {c.nfcCard!.status === 'active' ? 'Hoạt động' : 'Đã khóa'}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="p-4 text-right space-x-2">
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    const newStatus = c.nfcCard!.status === 'active' ? 'suspended' : 'active';
+                                    const confirmMsg = newStatus === 'suspended'
+                                      ? `Bạn có chắc chắn muốn TẠM KHÓA thẻ NFC (UID: ${c.nfcCard!.cardId}) của khách hàng ${c.name}?`
+                                      : `Bạn có chắc chắn muốn MỞ KHÓA thẻ NFC (UID: ${c.nfcCard!.cardId}) của khách hàng ${c.name}?`;
+                                    
+                                    if (!confirm(confirmMsg)) return;
+
+                                    try {
+                                      const res = await fetch(`${API_BASE_URL}/api/admin/nfc/toggle-status`, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+                                        },
+                                        body: JSON.stringify({
+                                          userId: c.id,
+                                          cardId: c.nfcCard!.cardId,
+                                          status: newStatus
+                                        })
+                                      });
+                                      if (res.ok) {
+                                        alert(newStatus === 'suspended' ? 'Đã khóa thẻ thành công!' : 'Đã mở khóa thẻ thành công!');
+                                        fetchData();
+                                      } else {
+                                        const data = await res.json();
+                                        alert(data.error || 'Thao tác thất bại!');
+                                      }
+                                    } catch (err) {
+                                      console.error(err);
+                                      alert('Lỗi kết nối máy chủ!');
+                                    }
+                                  }}
+                                  className={`px-3 py-1 rounded-lg text-[10px] font-bold border transition-colors cursor-pointer ${
+                                    c.nfcCard!.status === 'active'
+                                      ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200'
+                                      : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'
+                                  }`}
+                                >
+                                  {c.nfcCard!.status === 'active' ? 'Tạm khóa' : 'Mở khóa'}
+                                </button>
+                                
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    if (!confirm(`CẢNH BÁO: Bạn có chắc chắn muốn THU HỒI / HỦY LIÊN KẾT thẻ NFC (UID: ${c.nfcCard!.cardId}) khỏi tài khoản của ${c.name}? Khách hàng sẽ mất toàn bộ quyền truy cập bằng thẻ này.`)) return;
+
+                                    try {
+                                      const res = await fetch(`${API_BASE_URL}/api/users/nfc/unlink`, {
+                                        method: 'POST',
+                                        headers: {
+                                          'Content-Type': 'application/json',
+                                          'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+                                        },
+                                        body: JSON.stringify({
+                                          userId: c.id,
+                                          cardId: c.nfcCard!.cardId
+                                        })
+                                      });
+                                      if (res.ok) {
+                                        alert('Đã thu hồi và hủy liên kết thẻ NFC thành công!');
+                                        fetchData();
+                                      } else {
+                                        const data = await res.json();
+                                        alert(data.error || 'Thao tác thất bại!');
+                                      }
+                                    } catch (err) {
+                                      console.error(err);
+                                      alert('Lỗi kết nối máy chủ!');
+                                    }
+                                  }}
+                                  className="px-3 py-1 bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-200 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
+                                >
+                                  Thu hồi
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5} className="p-8 text-center text-stone-400 font-semibold">
+                              Chưa có thẻ NFC nào được phát hành trên hệ thống.
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
               </div>
             )}
 
