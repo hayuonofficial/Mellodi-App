@@ -264,7 +264,11 @@ export const AdminDashboard: React.FC = () => {
         alert(data.message || (language === 'vi' ? 'Đã khóa đồng loạt thẻ thành công!' : 'All cards suspended successfully!'));
         fetchData(); // Reload stats and customer lists
       } else {
-        alert(data.error || 'Lỗi hệ thống!');
+        let errorMsg = data.error || 'Lỗi hệ thống!';
+        if (data.debug) {
+          errorMsg += `\n[Debug: User=${data.debug.hasUser}, Role=${data.debug.role}, Email=${data.debug.email}, ID=${data.debug.userId}]`;
+        }
+        alert(errorMsg);
       }
     } catch (err) {
       console.error("Bulk suspend error:", err);
@@ -1232,7 +1236,11 @@ export const AdminDashboard: React.FC = () => {
                                         fetchData();
                                       } else {
                                         const data = await res.json();
-                                        alert(data.error || 'Thao tác thất bại!');
+                                        let errorMsg = data.error || 'Thao tác thất bại!';
+                                        if (data.debug) {
+                                          errorMsg += `\n[Debug: User=${data.debug.hasUser}, Role=${data.debug.role}, Email=${data.debug.email}, ID=${data.debug.userId}]`;
+                                        }
+                                        alert(errorMsg);
                                       }
                                     } catch (err) {
                                       console.error(err);

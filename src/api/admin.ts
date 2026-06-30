@@ -27,7 +27,15 @@ router.use(authenticateToken);
 // Apply role restriction middleware to allow only admin and manager
 router.use((req: AuthenticatedRequest, res, next) => {
   if (!req.user || (req.user.role !== "admin" && req.user.role !== "manager")) {
-    return res.status(403).json({ error: "Bạn không có quyền thực hiện chức năng này!" });
+    return res.status(403).json({ 
+      error: "Bạn không có quyền thực hiện chức năng này!",
+      debug: {
+        hasUser: !!req.user,
+        role: req.user ? req.user.role : null,
+        email: req.user ? req.user.email : null,
+        userId: req.user ? req.user.id : null
+      }
+    });
   }
   next();
 });
