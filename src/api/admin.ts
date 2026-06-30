@@ -511,4 +511,29 @@ router.post("/nfc/toggle-status", async (req, res) => {
   }
 });
 
+// API: Admin - Suspend all active NFC Cards at once
+router.post("/nfc/suspend-all", async (req, res) => {
+  try {
+    const allUsers = await getAllUsers();
+    let count = 0;
+
+    for (const user of allUsers) {
+      if (user.nfcCard && user.nfcCard.status === "active") {
+        await updateUser(user.id, {
+          nfcCard: {
+            ...user.nfcCard,
+            status: "suspended"
+          }
+        });
+        count++;
+      }
+    }
+
+    res.json({ success: true, message: `Đã tạm khóa đồng loạt ${count} thẻ NFC đang hoạt động thành công!` });
+  } catch (error) {
+    console.error("Suspend all NFC error:", error);
+    res.status(500).json({ error: "Lỗi hệ thống khi khóa đồng loạt thẻ NFC." });
+  }
+});
+
 export default router;

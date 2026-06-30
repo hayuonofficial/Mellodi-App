@@ -4,7 +4,7 @@ import {
   Users, TrendingUp, ShoppingBag, Award, Search, Filter, 
   ChevronRight, ArrowLeft, RefreshCw, BarChart2, Download, 
   DollarSign, Calendar, Star, Coffee, Sparkles, AlertCircle, CheckCircle,
-  GraduationCap, CreditCard, Plus, Wifi, Smartphone, Tag, ShieldCheck, X
+  GraduationCap, CreditCard, Plus, Wifi, Smartphone, Tag, ShieldCheck, X, Lock
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -241,6 +241,34 @@ export const AdminDashboard: React.FC = () => {
       console.error("Failed to fetch admin products:", err);
     } finally {
       setAdminProductsLoading(false);
+    }
+  };
+
+  const handleSuspendAllNfc = async () => {
+    const confirmMsg = language === 'vi' 
+      ? '⚠️ CẢNH BÁO KHẨN CẤP:\nBạn có chắc chắn muốn TẠM KHÓA ĐỒNG LOẠT tất cả thẻ NFC đang hoạt động trên hệ thống? Thao tác này sẽ đình chỉ hoạt động thanh toán của mọi thẻ ngay lập tức.' 
+      : '⚠️ EMERGENCY WARNING:\nAre you sure you want to BULK SUSPEND all active NFC cards on the system?';
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/admin/nfc/suspend-all`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('mellodi_jwt_token')}`
+        }
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert(data.message || (language === 'vi' ? 'Đã khóa đồng loạt thẻ thành công!' : 'All cards suspended successfully!'));
+        fetchData(); // Reload stats and customer lists
+      } else {
+        alert(data.error || 'Lỗi hệ thống!');
+      }
+    } catch (err) {
+      console.error("Bulk suspend error:", err);
+      alert(language === 'vi' ? 'Lỗi kết nối máy chủ!' : 'Server connection error!');
     }
   };
 
@@ -720,6 +748,28 @@ export const AdminDashboard: React.FC = () => {
             {/* TAB 4: NFC CARD STATION */}
             {activeSubTab === 'nfc' && (
               <div className="space-y-6">
+                
+                {/* Advanced Emergency Administrative Actions Banner */}
+                <div className="bg-rose-50/50 border border-rose-100 rounded-3xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-left">
+                  <div>
+                    <h4 className="text-xs font-bold text-rose-950 uppercase tracking-wider flex items-center space-x-1.5">
+                      <AlertCircle className="w-4 h-4 text-rose-700" />
+                      <span>Thao tác hệ thống khẩn cấp</span>
+                    </h4>
+                    <p className="text-[11px] text-rose-800/80 mt-1 leading-relaxed">
+                      Khóa tạm thời đồng loạt hoạt động của tất cả thẻ NFC đang hoạt động trong trường hợp khẩn cấp (vd: phát hiện sự cố bảo mật hoặc bảo trì thiết bị).
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSuspendAllNfc}
+                    className="shrink-0 px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs hover:shadow-md transition-all flex items-center space-x-1.5 cursor-pointer"
+                  >
+                    <Lock className="w-3.5 h-3.5" />
+                    <span>Khóa đồng loạt tất cả thẻ NFC</span>
+                  </button>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   
                   {/* Column 1: Issue/Link Card */}
