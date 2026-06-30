@@ -14,10 +14,20 @@ async function getUserByNfcCardId(cardId: string) {
 // API: Get current User
 router.get("/:id", async (req, res) => {
   try {
-    const user = await getUser(req.params.id);
+    let user = await getUser(req.params.id);
     if (!user) {
       return res.status(404).json({ error: "Không tìm thấy thông tin thành viên!" });
     }
+
+    // Self-heal: Ensure admin@mellodi.com always has the admin role
+    if (user.email.toLowerCase().trim() === "admin@mellodi.com" && user.role !== "admin") {
+      const updatedUser = await updateUser(user.id, { role: "admin" });
+      if (updatedUser) {
+        user = updatedUser;
+        console.log("[Database] Self-healed admin@mellodi.com role in GET user.");
+      }
+    }
+
     const { password: _, ...safeUser } = user;
     res.json(safeUser);
   } catch (error) {

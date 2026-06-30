@@ -146,17 +146,26 @@ router.post("/login", async (req, res) => {
         await createUser(newAdmin);
         user = newAdmin;
         console.log("[Database] Auto-created admin@mellodi.com user in database.");
-      } else if (!user.password) {
-        const newHashedPassword = await bcrypt.hash("Abc@123", 10);
-        await updateUser(user.id, { password: newHashedPassword });
-        user.password = newHashedPassword;
       } else {
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
+        // Auto-heal admin role to ensure it has administrative privileges
+        if (user.role !== "admin") {
+          await updateUser(user.id, { role: "admin" });
+          user.role = "admin";
+          console.log("[Database] Auto-healed admin role to 'admin' in database.");
+        }
+
+        if (!user.password) {
           const newHashedPassword = await bcrypt.hash("Abc@123", 10);
           await updateUser(user.id, { password: newHashedPassword });
           user.password = newHashedPassword;
-          console.log("[Database] Auto-healed admin password hash in database.");
+        } else {
+          const isMatch = await bcrypt.compare(password, user.password);
+          if (!isMatch) {
+            const newHashedPassword = await bcrypt.hash("Abc@123", 10);
+            await updateUser(user.id, { password: newHashedPassword });
+            user.password = newHashedPassword;
+            console.log("[Database] Auto-healed admin password hash in database.");
+          }
         }
       }
     }
