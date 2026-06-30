@@ -1560,7 +1560,7 @@ export const AdminDashboard: React.FC = () => {
                                 <p className="font-mono font-bold text-coffee-950">{o.id}</p>
                                 <p className="text-[10px] text-stone-400">{o.date}</p>
                                 <p className="text-[10px] text-stone-500 font-serif">
-                                  {o.items.map((item: any) => `${item.quantity}x ${item.product.name.vi} (${item.size})`).join(', ')}
+                                  {o.items.map((item: any) => `${item.quantity}x ${item.product?.name?.vi || item.name || 'Sản phẩm'} (${item.size})`).join(', ')}
                                 </p>
                               </div>
                               <div className="text-right space-y-0.5">

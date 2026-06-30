@@ -26,7 +26,7 @@ function getFavoriteDrink(orders: OrderRecord[]) {
   const counts: Record<string, number> = {};
   orders.forEach(o => {
     o.items.forEach(item => {
-      const name = item.product.name.vi;
+      const name = item.product?.name?.vi || item.name || "Sản phẩm";
       counts[name] = (counts[name] || 0) + (item.quantity || 1);
     });
   });
@@ -134,12 +134,12 @@ router.get("/customers/:userId", async (req, res) => {
     const productCounts: Record<string, { name: string; count: number; category: string }> = {};
     userOrders.forEach(o => {
       o.items.forEach(item => {
-        const prodId = item.productId;
+        const prodId = item.productId || "unknown";
         if (!productCounts[prodId]) {
           productCounts[prodId] = {
-            name: item.product.name.vi,
+            name: item.product?.name?.vi || item.name || "Sản phẩm",
             count: 0,
-            category: item.product.category
+            category: item.product?.category || "espresso"
           };
         }
         productCounts[prodId].count += item.quantity || 1;
@@ -190,17 +190,17 @@ router.get("/analytics", async (req, res) => {
     const productCounts: Record<string, { name: string; count: number; revenue: number; image: string }> = {};
     allOrders.forEach(o => {
       o.items.forEach(item => {
-        const prodId = item.productId;
+        const prodId = item.productId || "unknown";
         if (!productCounts[prodId]) {
           productCounts[prodId] = {
-            name: item.product.name.vi,
+            name: item.product?.name?.vi || item.name || "Sản phẩm",
             count: 0,
             revenue: 0,
-            image: item.product.image
+            image: item.product?.image || "☕"
           };
         }
         productCounts[prodId].count += item.quantity || 1;
-        productCounts[prodId].revenue += (item.product.priceVND * (item.size === 'L' ? 1.2 : item.size === 'M' ? 1.1 : 1.0) + (item.toppings.length * 5000)) * item.quantity;
+        productCounts[prodId].revenue += (item.product?.priceVND || item.priceVND || 0) * (item.quantity || 1);
       });
     });
 

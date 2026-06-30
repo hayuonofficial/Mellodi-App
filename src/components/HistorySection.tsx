@@ -260,7 +260,7 @@ export const HistorySection: React.FC = () => {
                   <div key={idx} className="flex justify-between text-xs leading-normal">
                     <div className="flex-1">
                       <p className="font-bold text-coffee-950">
-                        {item.product.name[language]} <span className="font-normal text-stone-400">x{item.quantity}</span>
+                        {item.product?.name?.[language] || item.name || 'Sản phẩm'} <span className="font-normal text-stone-400">x{item.quantity}</span>
                       </p>
                       <p className="text-[10px] text-coffee-500">
                         Size {item.size} • Ice {item.ice} • Sugar {item.sugar}
@@ -269,7 +269,7 @@ export const HistorySection: React.FC = () => {
                     </div>
                     
                     <span className="font-mono font-bold text-coffee-600">
-                      {formatPriceInCurrency(item.product.priceVND * item.quantity)}
+                      {formatPriceInCurrency((item.product?.priceVND || item.priceVND || 0) * item.quantity)}
                     </span>
                   </div>
                 ))}

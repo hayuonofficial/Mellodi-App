@@ -13,8 +13,7 @@ export const CardSection: React.FC = () => {
     topUpWallet,
     buyLenPoints,
     formatPriceInCurrency,
-    currentUser,
-    disableBiometric
+    currentUser
   } = useApp();
 
   const [topUpAmount, setTopUpAmount] = useState<string>('100000');

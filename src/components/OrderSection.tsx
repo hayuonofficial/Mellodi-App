@@ -141,6 +141,7 @@ export const OrderSection: React.FC = () => {
   // Cart Pricing Calculations (in active currency)
   const calculateCartSubtotal = () => {
     return cart.reduce((sum, item) => {
+      if (!item.product) return sum;
       let base = getProductPriceInActiveCurrency(item.product);
       const sizeMultiplier = item.size === 'L' ? 1.2 : item.size === 'M' ? 1.1 : 1.0;
       let price = base * sizeMultiplier;
@@ -600,6 +601,7 @@ export const OrderSection: React.FC = () => {
                 ) : (
                   <>
                     {cart.map((item) => {
+                      if (!item.product) return null;
                       const basePrice = getProductPriceInActiveCurrency(item.product);
                       const sizeMultiplier = item.size === 'L' ? 1.2 : item.size === 'M' ? 1.1 : 1.0;
                       let itemSinglePrice = basePrice * sizeMultiplier;
