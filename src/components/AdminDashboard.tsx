@@ -337,10 +337,10 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Navigation sub-tabs */}
-        <div className="flex bg-[#F3F0ED] p-1 rounded-xl w-full sm:w-auto overflow-x-auto scrollbar-none flex-nowrap space-x-1">
+        <div className="flex flex-wrap bg-[#F3F0ED] p-1.5 rounded-xl w-full lg:w-auto gap-1 shadow-inner">
           <button
             onClick={() => { setActiveSubTab('analytics'); setSelectedCustomerId(null); }}
-            className={`shrink-0 sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
+            className={`flex-grow sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
               activeSubTab === 'analytics' ? 'bg-white text-coffee-950 shadow-xs' : 'text-stone-500 hover:text-stone-900'
             }`}
           >
@@ -349,7 +349,7 @@ export const AdminDashboard: React.FC = () => {
           </button>
           <button
             onClick={() => { setActiveSubTab('directory'); setSelectedCustomerId(null); }}
-            className={`shrink-0 sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
+            className={`flex-grow sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
               activeSubTab === 'directory' ? 'bg-white text-coffee-950 shadow-xs' : 'text-stone-500 hover:text-stone-900'
             }`}
           >
@@ -358,7 +358,7 @@ export const AdminDashboard: React.FC = () => {
           </button>
           <button
             onClick={() => { setActiveSubTab('education'); setSelectedCustomerId(null); }}
-            className={`shrink-0 sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
+            className={`flex-grow sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
               activeSubTab === 'education' ? 'bg-white text-coffee-950 shadow-xs' : 'text-stone-500 hover:text-stone-900'
             }`}
           >
@@ -367,7 +367,7 @@ export const AdminDashboard: React.FC = () => {
           </button>
           <button
             onClick={() => { setActiveSubTab('nfc'); setSelectedCustomerId(null); }}
-            className={`shrink-0 sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
+            className={`flex-grow sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
               activeSubTab === 'nfc' ? 'bg-white text-coffee-950 shadow-xs' : 'text-stone-500 hover:text-stone-900'
             }`}
           >
@@ -376,7 +376,7 @@ export const AdminDashboard: React.FC = () => {
           </button>
           <button
             onClick={() => { setActiveSubTab('menu'); setSelectedCustomerId(null); }}
-            className={`shrink-0 sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
+            className={`flex-grow sm:flex-none px-3.5 sm:px-5 py-2 text-center text-xs font-bold rounded-lg transition-all duration-300 cursor-pointer ${
               activeSubTab === 'menu' ? 'bg-white text-coffee-950 shadow-xs' : 'text-stone-500 hover:text-stone-900'
             }`}
           >
