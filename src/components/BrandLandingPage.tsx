@@ -1177,10 +1177,10 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                               Code: {voucher.code}
                             </span>
                             <h5 className="font-serif font-bold text-xs text-coffee-950 mt-1.5">
-                              {voucher.title[language] || voucher.title['vi']}
+                              {voucher.title?.[language] || voucher.title?.['vi'] || voucher.title || ''}
                             </h5>
                             <p className="text-[10px] text-stone-555 leading-normal max-w-[190px] font-medium">
-                              {voucher.description[language] || voucher.description['vi']}
+                              {voucher.description?.[language] || voucher.description?.['vi'] || voucher.description || ''}
                             </p>
                             <p className="text-[9px] text-stone-400 font-mono mt-1">
                               Hạn dùng: {voucher.expiryDate}
@@ -1239,7 +1239,7 @@ export const BrandLandingPage: React.FC<BrandLandingPageProps> = ({ activeSectio
                                 })}
                               </td>
                               <td className="py-3 px-2 text-stone-600 max-w-[200px] truncate font-medium">
-                                {order.items.map(item => `${item.name[language] || item.name} (x${item.quantity})`).join(', ')}
+                                {order.items.map(item => `${item.product?.name?.[language] || item.product?.name?.['vi'] || item.name || 'Sản phẩm'} (x${item.quantity})`).join(', ')}
                               </td>
                               <td className="py-3 px-2 text-right font-mono font-bold text-coffee-950">
                                 {formatPrice(order.totalPrice)}
