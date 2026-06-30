@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Language, Currency, CartItem, Product, Voucher, Order, LocationPromo } from '../types';
 import { initialVouchers } from '../data/vouchers';
 import { stores } from '../data/stores';
+import { products } from '../data/products';
 
 export interface AppUser {
   id: string;
@@ -70,6 +71,8 @@ interface AppContextProps {
   markAllNotificationsAsRead: () => Promise<void>;
   deleteNotification: (notificationId: string) => Promise<void>;
   addVoucherDirectly: (voucher: Voucher) => void;
+  products: Product[];
+  fetchProducts: () => Promise<void>;
   setCurrentUser: React.Dispatch<React.SetStateAction<AppUser | null>>;
   setLenPoints: React.Dispatch<React.SetStateAction<number>>;
   setWalletBalance: React.Dispatch<React.SetStateAction<number>>;
@@ -133,6 +136,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [activePromo, setActivePromo] = useState<LocationPromo | null>(null);
+
+  const [productsState, setProductsState] = useState<Product[]>(() => {
+    return products;
+  });
+
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/products`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setProductsState(data);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch products:", err);
+    }
+  };
+
+  // Fetch products once on app initialization
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   // Monitor network changes
   useEffect(() => {
@@ -936,6 +962,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       markAllNotificationsAsRead,
       deleteNotification,
       addVoucherDirectly,
+      products: productsState,
+      fetchProducts,
       setCurrentUser,
       setLenPoints,
       setWalletBalance,

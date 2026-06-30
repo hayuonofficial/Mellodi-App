@@ -1,0 +1,37 @@
+{
+  "users": [
+    {
+      "id": "u-admin",
+      "name": "Mellodi Admin",
+      "email": "admin@mellodi.com",
+      "phone": "0123456789",
+      "walletBalance": 2500000,
+      "lenPoints": 12000,
+      "tier": "Mellodi Premium",
+      "role": "admin",
+      "createdAt": "2026-06-30T20:22:10.138Z"
+    }
+  ],
+  "orders": [],
+  "transactions": [],
+  "redeemedGifts": [],
+  "notifications": [
+    {
+      "id": "notif-welcome-admin",
+      "userId": "u-admin",
+      "title": {
+        "vi": "Chào mừng đến với Mellodi Loyalty!",
+        "en": "Welcome to Mellodi Loyalty!",
+        "ko": "멜로디 로열티에 오신 것을 환영합니다!"
+      },
+      "message": {
+        "vi": "Chào mừng Admin đến với hệ thống Mellodi Coffee Loyalty.",
+        "en": "Welcome Admin to Mellodi Coffee Loyalty system.",
+        "ko": "멜로디 커피 로열티 hệ thống에 오신 것을 환영합니다."
+      },
+      "type": "system",
+      "date": "7/1/2026, 3:22:10 AM",
+      "isRead": false
+    }
+  ]
+}

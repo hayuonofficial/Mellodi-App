@@ -15,7 +15,7 @@ import fs from "fs";
 import path from "path";
 
 // Helper to wrap Firestore operations with a timeout to prevent hanging when offline or blocked
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 3500): Promise<T> {
+async function withTimeout<T>(promise: Promise<T>, timeoutMs: number = 1500): Promise<T> {
   let timeoutId: NodeJS.Timeout;
   
   const timeoutPromise = new Promise<never>((_, reject) => {
@@ -165,10 +165,10 @@ export interface DatabaseSchema {
   users: UserRecord[];
   orders: OrderRecord[];
   transactions: TransactionRecord[];
-  redeemedGifts?: RedeemedGift[];
-  notifications?: UserNotification[];
+  redeemedGifts: RedeemedGift[];
+  notifications: UserNotification[];
   educationConsultations?: EducationConsultation[];
-  products?: ProductRecord[];
+  products?: any[];
 }
 
 const localDbPath = path.join(process.cwd(), "local_db.json");
@@ -180,9 +180,8 @@ const DEFAULT_LOCAL_DB: DatabaseSchema = {
       name: "Mellodi Admin",
       email: "admin@mellodi.com",
       phone: "0123456789",
-      password: "$2b$10$CZ33M5295rSHKjGNPyrdnOxIOMIhMypsbzeek.E43tNtNCE9b8CTO", // Hashed "Abc@123"
-      walletBalance: 1000000,
-      lenPoints: 300000,
+      walletBalance: 2500000,
+      lenPoints: 12000,
       tier: "Mellodi Premium",
       role: "admin",
       createdAt: new Date().toISOString()
@@ -191,10 +190,9 @@ const DEFAULT_LOCAL_DB: DatabaseSchema = {
   orders: [],
   transactions: [],
   redeemedGifts: [],
-  educationConsultations: [],
   notifications: [
     {
-      id: "notif-welcome",
+      id: "notif-welcome-admin",
       userId: "u-admin",
       title: {
         vi: "Chào mừng đến với Mellodi Loyalty!",
@@ -213,7 +211,13 @@ const DEFAULT_LOCAL_DB: DatabaseSchema = {
   ]
 };
 
+// In-Memory Local Database Cache for high-performance non-blocking reads/writes
+let localDbCache: DatabaseSchema | null = null;
+
 function readLocalDb(): DatabaseSchema {
+  if (localDbCache !== null) {
+    return localDbCache;
+  }
   try {
     if (fs.existsSync(localDbPath)) {
       const content = fs.readFileSync(localDbPath, "utf-8");
@@ -224,21 +228,25 @@ function readLocalDb(): DatabaseSchema {
       if (!data.transactions) data.transactions = [];
       if (!data.redeemedGifts) data.redeemedGifts = [];
       if (!data.notifications) data.notifications = [];
+      localDbCache = data;
       return data;
     }
   } catch (err) {
     console.error("[Database] Failed to read local_db.json file:", err);
   }
+  localDbCache = DEFAULT_LOCAL_DB;
   writeLocalDb(DEFAULT_LOCAL_DB);
   return DEFAULT_LOCAL_DB;
 }
 
 function writeLocalDb(data: DatabaseSchema) {
-  try {
-    fs.writeFileSync(localDbPath, JSON.stringify(data, null, 2), "utf-8");
-  } catch (err) {
-    console.error("[Database] Failed to write local_db.json file:", err);
-  }
+  localDbCache = data; // Update in-memory cache instantly
+  // Write to disk asynchronously to free the event loop and optimize HTTP response time
+  fs.writeFile(localDbPath, JSON.stringify(data, null, 2), "utf-8", (err) => {
+    if (err) {
+      console.error("[Database] Failed to write local_db.json file asynchronously:", err);
+    }
+  });
 }
 
 // ==========================================

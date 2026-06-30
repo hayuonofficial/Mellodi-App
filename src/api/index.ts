@@ -8,12 +8,13 @@ import usersRouter from "./users.js";
 import webhookRouter from "./webhook.js";
 import adminRouter from "./admin.js";
 import educationRouter from "./education.js";
+import { authRateLimiter } from "./rate-limiter.js";
 
 import { getAllProductsGlobal } from "../lib/firebase-db.js";
 
 const apiRouter = express.Router();
 
-apiRouter.use("/auth", authRouter);
+apiRouter.use("/auth", authRateLimiter, authRouter);
 apiRouter.use("/wallet", walletRouter);
 apiRouter.use("/orders", ordersRouter);
 apiRouter.use("/gifts", giftsRouter);

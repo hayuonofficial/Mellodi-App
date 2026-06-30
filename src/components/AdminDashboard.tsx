@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useApp, API_BASE_URL } from '../context/AppContext';
+import { useApp, API_BASE_URL, getAuthHeaders } from '../context/AppContext';
 import { 
   Users, TrendingUp, ShoppingBag, Award, Search, Filter, 
   ChevronRight, ArrowLeft, RefreshCw, BarChart2, Download, 
@@ -98,7 +98,7 @@ async function generateHmacSignature(secretKey: string, message: string): Promis
 }
 
 export const AdminDashboard: React.FC = () => {
-  const { language, formatPrice, currentUser } = useApp();
+  const { language, formatPrice, currentUser, fetchProducts } = useApp();
   const [activeSubTab, setActiveSubTab] = useState<'analytics' | 'directory' | 'education' | 'nfc'>('analytics');
   const [consultations, setConsultations] = useState<any[]>([]);
   
@@ -164,7 +164,9 @@ export const AdminDashboard: React.FC = () => {
     setLoading(true);
     try {
       // 1. Fetch Analytics
-      const analRes = await fetch(`${API_BASE_URL}/api/admin/analytics`);
+      const analRes = await fetch(`${API_BASE_URL}/api/admin/analytics`, {
+        headers: getAuthHeaders()
+      });
       if (analRes.ok) {
         const analData = await analRes.json();
         setAnalytics(analData);
@@ -172,14 +174,18 @@ export const AdminDashboard: React.FC = () => {
 
       // 2. Fetch Customers
       const custUrl = `${API_BASE_URL}/api/admin/customers?search=${encodeURIComponent(searchTerm)}&tier=${tierFilter}&spend=${spendFilter}`;
-      const custRes = await fetch(custUrl);
+      const custRes = await fetch(custUrl, {
+        headers: getAuthHeaders()
+      });
       if (custRes.ok) {
         const custData = await custRes.json();
         setCustomers(custData);
       }
 
       // 3. Fetch Education Consultations
-      const eduRes = await fetch(`${API_BASE_URL}/api/admin/education-consultations`);
+      const eduRes = await fetch(`${API_BASE_URL}/api/admin/education-consultations`, {
+        headers: getAuthHeaders()
+      });
       if (eduRes.ok) {
         const eduData = await eduRes.json();
         setConsultations(eduData);
@@ -206,7 +212,9 @@ export const AdminDashboard: React.FC = () => {
     const fetchDetail = async () => {
       setDetailLoading(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/api/admin/customers/${selectedCustomerId}`);
+        const res = await fetch(`${API_BASE_URL}/api/admin/customers/${selectedCustomerId}`, {
+          headers: getAuthHeaders()
+        });
         if (res.ok) {
           const data = await res.json();
           setCustomerDetail(data);
@@ -227,6 +235,7 @@ export const AdminDashboard: React.FC = () => {
       if (res.ok) {
         const data = await res.json();
         setAdminProducts(data);
+        fetchProducts(); // Synchronize the global AppContext cache
       }
     } catch (err) {
       console.error("Failed to fetch admin products:", err);
@@ -248,7 +257,7 @@ export const AdminDashboard: React.FC = () => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/admin/seed-data`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: getAuthHeaders()
       });
       const data = await res.json();
       if (res.ok) {

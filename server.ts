@@ -2,6 +2,7 @@ import express from "express";
 import path from "path";
 import apiRouter from "./src/api/index.js";
 import { addClient, removeClient } from "./src/api/sse.js";
+import { apiRateLimiter } from "./src/api/rate-limiter.js";
 
 const app = express();
 const PORT = 3000;
@@ -48,8 +49,8 @@ app.get("/api/sse", (req, res) => {
   });
 });
 
-// Mount modular API endpoints
-app.use("/api", apiRouter);
+// Mount modular API endpoints protected by rate limiting
+app.use("/api", apiRateLimiter, apiRouter);
 
 // Initialize Vite or serve static production files
 async function initServer() {
@@ -62,8 +63,14 @@ async function initServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
+    // Cache static assets (JS, CSS, images) for 1 day to reduce server load
+    app.use(express.static(distPath, {
+      maxAge: "1d",
+      etag: true
+    }));
     app.get("*", (req, res) => {
+      // Set short cache for the HTML shell
+      res.setHeader("Cache-Control", "public, max-age=3600, must-revalidate");
       res.sendFile(path.join(distPath, "index.html"));
     });
   }

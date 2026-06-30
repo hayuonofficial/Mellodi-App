@@ -28,6 +28,7 @@ export const OrderSection: React.FC = () => {
     convertVNDToActiveCurrency,
     getPointsCost,
     orders,
+    products: appProducts,
   } = useApp();
 
   const [selectedCategory, setSelectedCategory] = useState<ProductCategory | 'all'>('all');
@@ -56,28 +57,9 @@ export const OrderSection: React.FC = () => {
     { id: 'pastry', label: translations[language]['order.category.pastry'] },
   ];
 
-  const [dynamicProducts, setDynamicProducts] = useState<Product[]>(products);
-
-  React.useEffect(() => {
-    const fetchMenu = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/products`);
-        if (res.ok) {
-          const data = await res.json();
-          if (Array.isArray(data) && data.length > 0) {
-            setDynamicProducts(data);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to fetch dynamic menu:", err);
-      }
-    };
-    fetchMenu();
-  }, []);
-
   const filteredProducts = selectedCategory === 'all' 
-    ? dynamicProducts 
-    : dynamicProducts.filter(p => p.category === selectedCategory);
+    ? appProducts 
+    : appProducts.filter(p => p.category === selectedCategory);
 
   const getProductPriceInActiveCurrency = (p: Product) => {
     if (currency === 'USD') return p.priceUSD;

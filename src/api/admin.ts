@@ -17,8 +17,20 @@ import {
   TransactionRecord
 } from "../lib/firebase-db.js";
 import { products } from "../data/products.js";
+import { authenticateToken, AuthenticatedRequest } from "./middleware.js";
 
 const router = express.Router();
+
+// Apply authentication middleware to protect all admin endpoints
+router.use(authenticateToken);
+
+// Apply role restriction middleware to allow only admin and manager
+router.use((req: AuthenticatedRequest, res, next) => {
+  if (!req.user || (req.user.role !== "admin" && req.user.role !== "manager")) {
+    return res.status(403).json({ error: "Bạn không có quyền thực hiện chức năng này!" });
+  }
+  next();
+});
 
 // Helper to get favorite drink for a user's orders
 function getFavoriteDrink(orders: OrderRecord[]) {
